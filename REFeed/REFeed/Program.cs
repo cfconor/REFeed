@@ -45,11 +45,14 @@ namespace Database_Connection_Application
             try
             {
                 reader = query.ExecuteReader();
+                Console.WriteLine("Reader executed");
+
                 if (reader.HasRows)
                 {
+                    Console.WriteLine("Reader has rows");
                     while (reader.Read())
                     {
-                        Console.WriteLine(reader.GetString(0));
+                        Console.WriteLine("Count(*) of CONSTITUENT is... " + reader.GetInt32(0));
                     }
                     reader.Close();
                 }
