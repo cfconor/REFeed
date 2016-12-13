@@ -1,18 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Data;
+using System.Data.SqlClient;
 
-namespace REFeed
+
+
+namespace Database_Connection_Application
+
 {
-    class Program
+
+    public class Program
+
     {
+
         static void Main(string[] args)
         {
+            string cnnString = null;
+            string DBQuery = null;
+            
+            
 
-
+            cnnString = "Server=lazarus.ucc.ie;Database=UCC;Trusted_Connection=True;";
+            DBQuery = "select COUNT(*) from CONSTITUENT";
+            
 
         }
+
     }
+
 }
