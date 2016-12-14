@@ -17,8 +17,8 @@ namespace Database_Connection_Application
             string cnnString = null;
             string DBQuery = null;
             
-            cnnString = "Server=lazarus.ucc.ie;Database=UCC;Trusted_Connection=True;";
-            DBQuery = "select COUNT(*) from CONSTITUENT";
+            cnnString = "Server=lazarus.ucc.ie;Database=master;Trusted_Connection=True;";
+            DBQuery = "SELECT * FROM OPENQUERY(ITSPRD, 'SELECT count(*) FROM RAISERS_EDGE_EXTRACT')";
 
             SqlConnection cnn = new SqlConnection(cnnString);
             SqlCommand query = new SqlCommand();
@@ -68,6 +68,7 @@ namespace Database_Connection_Application
 
             cnn.Close();
             //for debugging, console stays open
+            Console.WriteLine("Press any button to close....");
             Console.ReadKey();
         }
 
