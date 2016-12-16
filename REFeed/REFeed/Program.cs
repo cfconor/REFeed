@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Text;
+
 
 
 
@@ -16,9 +18,13 @@ namespace Database_Connection_Application
         {
             string cnnString = null;
             string DBQuery = null;
-            
-            cnnString = "Server=lazarus.ucc.ie;Database=master;Trusted_Connection=True;";
-            DBQuery = "SELECT * FROM OPENQUERY(ITSPRD, 'SELECT count(*) FROM RAISERS_EDGE_EXTRACT')";
+            int loopControl = 10;
+            string googleAPIKey = "AIzaSyDGtABIyvMtekqCCD5dKSDGCn3mANVpvME";
+            string unsortedAddr = null;
+            string sortedAddr = null;
+
+            cnnString = "Server=lazarus.ucc.ie;Database=UCC;Trusted_Connection=True;";
+            DBQuery = "select * from ITSPRD..RENC_IF.RAISERS_EDGE_EXTRACT where ESRCLASSOF = '2016'";
 
             SqlConnection cnn = new SqlConnection(cnnString);
             SqlCommand query = new SqlCommand();
@@ -41,7 +47,7 @@ namespace Database_Connection_Application
                 Console.WriteLine("ping failed!");
             }
 
-            //query db
+            //query db for person information
             try
             {
                 reader = query.ExecuteReader();
@@ -50,9 +56,38 @@ namespace Database_Connection_Application
                 if (reader.HasRows)
                 {
                     Console.WriteLine("Reader has rows");
-                    while (reader.Read())
+
+                    //control the loop - use a second while condition (while i < loopControl, i++)
+                    int i = 0;
+
+                    while (i < loopControl && reader.Read())
                     {
-                        Console.WriteLine("Count(*) of CONSTITUENT is... " + reader.GetInt32(0));
+                        //use SortAddresses method to sort sort addresses into Google API readable format
+
+                        Console.WriteLine("Output Column data");
+
+                        Console.WriteLine("Name: " + reader.GetString(10) + " " + reader.GetString(9));
+
+                        Console.WriteLine("Class of: " + reader.GetString(39));
+
+                        Console.WriteLine("Address (Lines): " + reader.GetString(16));
+
+                        //use SortAddresses Method to format addresses into Google API URLS
+                        unsortedAddr = reader.GetString(16);
+                        
+                        sortedAddr = SortAddresses(unsortedAddr, googleAPIKey);
+                        Console.WriteLine("Output of SortAddresses: " + sortedAddr);
+
+
+
+                        Console.WriteLine("Address (County): " + reader.GetString(18));
+
+                        Console.WriteLine("Address (Country): " + reader.GetString(20));
+
+                        Console.WriteLine(" ");
+
+                        i++;
+                        
                     }
                     reader.Close();
                 }
@@ -72,6 +107,28 @@ namespace Database_Connection_Application
             Console.ReadKey();
         }
 
+        static string SortAddresses (string unsortedAddress, string APIKey)
+        {
+            
+            string googleURL = "https://maps.googleapis.com/maps/api/geocode/json?";
+            StringBuilder outputAddress = new StringBuilder(googleURL);
+            string finalAddress = "";
+
+            string[] delimiterStrings = {" /n"," "};
+
+            string[] words = unsortedAddress.Split(delimiterStrings, StringSplitOptions.None);
+
+            foreach (string s in words)
+            {
+                outputAddress.Append(s + "+"); 
+            }
+            
+            finalAddress = outputAddress.ToString();
+
+            //sortedAddress = unsortedAddress;
+
+            return finalAddress;
+        }
     }
 
 }
