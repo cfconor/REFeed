@@ -2,9 +2,9 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Text;
-
-
-
+using System.Net;
+using System.Net.Http;
+using System.IO;
 
 namespace Database_Connection_Application
 
@@ -18,7 +18,7 @@ namespace Database_Connection_Application
         {
             string cnnString = null;
             string DBQuery = null;
-            int loopControl = 10;
+            int loopControl = 5;
             string googleAPIKey = "AIzaSyDGtABIyvMtekqCCD5dKSDGCn3mANVpvME";
             string unsortedAddr = null;
             string sortedAddr = null;
@@ -78,12 +78,24 @@ namespace Database_Connection_Application
                         sortedAddr = SortAddresses(unsortedAddr, googleAPIKey);
                         Console.WriteLine("Output of SortAddresses: " + sortedAddr);
 
+                        string googleURL = sortedAddr;
+                        string returncode = "";
 
+                        WebRequest req = HttpWebRequest.Create(googleURL);
+                        req.Method = "GET";
 
-                        Console.WriteLine("Address (County): " + reader.GetString(18));
+                        string source;
+                        using (StreamReader URLreader = new StreamReader(req.GetResponse().GetResponseStream()))
+                        {
+                            source = URLreader.ReadToEnd();
+                        }
 
-                        Console.WriteLine("Address (Country): " + reader.GetString(20));
+                        Console.WriteLine(source);
 
+                        Console.WriteLine(returncode);
+                        //Console.WriteLine("Address (County): " + reader.GetString(18));
+
+                        //Console.WriteLine("Address (Country): " + reader.GetString(20));
                         Console.WriteLine(" ");
 
                         i++;
