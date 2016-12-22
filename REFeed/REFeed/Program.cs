@@ -77,10 +77,11 @@ namespace Database_Connection_Application
                         
                         sortedAddr = SortAddresses(unsortedAddr, googleAPIKey);
                         Console.WriteLine("Output of SortAddresses: " + sortedAddr);
-
+                        /*
                         string googleURL = sortedAddr;
                         string returncode = "";
 
+                        
                         WebRequest req = HttpWebRequest.Create(googleURL);
                         req.Method = "GET";
 
@@ -89,10 +90,12 @@ namespace Database_Connection_Application
                         {
                             source = URLreader.ReadToEnd();
                         }
+                        
 
                         Console.WriteLine(source);
 
                         Console.WriteLine(returncode);
+                        */
                         //Console.WriteLine("Address (County): " + reader.GetString(18));
 
                         //Console.WriteLine("Address (Country): " + reader.GetString(20));
@@ -141,6 +144,25 @@ namespace Database_Connection_Application
 
             return finalAddress;
         }
-    }
 
+        public static void JSONToOutputData (string JSONfileURL, string[] requiredReturnTypes)
+        {
+            using (StreamReader r = new StreamReader("C:\Users\ccreaghpeschau\Documents\REFeed\JSON1.json"))
+            {
+                string json = r.ReadToEnd();
+                List
+            }
+
+        }
+    }
+    
+    public class Item
+    {
+        public int street_number;
+        public string route;
+        public string locality;
+        public string administritive_area_level_1;
+        public string country;
+        public string postal_code;
+    }
 }
