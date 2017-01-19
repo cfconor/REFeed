@@ -5,6 +5,7 @@ using System.Text;
 using System.Net;
 using System.Net.Http;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace REFeed
 
@@ -114,7 +115,24 @@ namespace REFeed
             }
 
             //output reader data
+
+            //declare variables for deserialized JSON
+
+            string JSONcontents = File.ReadAllText(@"C:\Users\ccreaghpeschau\Documents\REFeed\JSON1.json");
+
+            Console.WriteLine(JSONcontents);
+
+            GoogleAPIJSONCode convertedJSON = JsonConvert.DeserializeObject<GoogleAPIJSONCode>(JSONcontents);
             
+
+
+            //Console.WriteLine("*********************");
+            //Console.WriteLine(convertedJSON.ToString());
+
+            
+            //console output some variables from the JSON input
+                    
+            Console.WriteLine();
 
             cnn.Close();
             //for debugging, console stays open
@@ -145,24 +163,9 @@ namespace REFeed
             return finalAddress;
         }
 
-        public static void JSONToOutputData (string JSONfileURL, string[] requiredReturnTypes)
-        {
-            using (StreamReader r = new StreamReader("C:\Users\ccreaghpeschau\Documents\REFeed\JSON1.json"))
-            {
-                string json = r.ReadToEnd();
-                List
-            }
 
-        }
+
     }
     
-    public class Item
-    {
-        public int street_number;
-        public string route;
-        public string locality;
-        public string administritive_area_level_1;
-        public string country;
-        public string postal_code;
-    }
+    
 }
