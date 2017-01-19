@@ -122,16 +122,18 @@ namespace REFeed
 
             Console.WriteLine(JSONcontents);
 
-            GoogleAPIJSONCode convertedJSON = JsonConvert.DeserializeObject<GoogleAPIJSONCode>(JSONcontents);
+            GoogleAPIJSONCode ConvertedJSON = new GoogleAPIJSONCode();
+
+            ConvertedJSON  = JsonConvert.DeserializeObject<GoogleAPIJSONCode>(JSONcontents);
+
+            //string someJSON = GoogleAPIJSONCode.Location
+
+            Console.WriteLine("*********************");
             
+            string text = GoogleAPIJSONCode.AddressComponent.Equals
 
-
-            //Console.WriteLine("*********************");
-            //Console.WriteLine(convertedJSON.ToString());
-
-            
             //console output some variables from the JSON input
-                    
+
             Console.WriteLine();
 
             cnn.Close();
