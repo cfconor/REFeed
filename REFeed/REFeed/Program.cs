@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.IO;
 using Newtonsoft.Json;
 
+
 namespace REFeed
 
 {
@@ -119,18 +120,22 @@ namespace REFeed
             //declare variables for deserialized JSON
 
             string JSONcontents = File.ReadAllText(@"C:\Users\ccreaghpeschau\Documents\REFeed\JSON1.json");
-
+            
             Console.WriteLine(JSONcontents);
 
-            GoogleAPIJSONCode ConvertedJSON = new GoogleAPIJSONCode();
+            Console.WriteLine("*********************");
 
-            ConvertedJSON  = JsonConvert.DeserializeObject<GoogleAPIJSONCode>(JSONcontents);
+            Console.WriteLine("Deserializing....");
 
-            //string someJSON = GoogleAPIJSONCode.Location
+            GoogleAPIJSONCode.AddressComponent JSONObj = JsonConvert.DeserializeObject<GoogleAPIJSONCode.AddressComponent>(JSONcontents);
+
+            string JSONlongName = JSONObj.long_name;
+            string JSONshortname = JSONObj.short_name;
+
+            Console.WriteLine(JSONlongName);
+            Console.WriteLine(JSONshortname);
 
             Console.WriteLine("*********************");
-            
-            string text = GoogleAPIJSONCode.AddressComponent.Equals
 
             //console output some variables from the JSON input
 
