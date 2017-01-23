@@ -79,7 +79,7 @@ namespace REFeed
                         
                         sortedAddr = SortAddresses(unsortedAddr, googleAPIKey);
                         Console.WriteLine("Output of SortAddresses: " + sortedAddr);
-                        /*
+                        
                         string googleURL = sortedAddr;
                         string returncode = "";
 
@@ -97,10 +97,10 @@ namespace REFeed
                         Console.WriteLine(source);
 
                         Console.WriteLine(returncode);
-                        */
-                        //Console.WriteLine("Address (County): " + reader.GetString(18));
+                        
+                        Console.WriteLine("Address (County): " + reader.GetString(18));
 
-                        //Console.WriteLine("Address (Country): " + reader.GetString(20));
+                        Console.WriteLine("Address (Country): " + reader.GetString(20));
                         Console.WriteLine(" ");
 
                         i++;
@@ -121,19 +121,38 @@ namespace REFeed
 
             string JSONcontents = File.ReadAllText(@"C:\Users\ccreaghpeschau\Documents\REFeed\JSON1.json");
             
-            Console.WriteLine(JSONcontents);
+            //Console.WriteLine(JSONcontents);
+
 
             Console.WriteLine("*********************");
-
             Console.WriteLine("Deserializing....");
+            Console.WriteLine("*********************");
 
-            GoogleAPIJSONCode.AddressComponent JSONObj = JsonConvert.DeserializeObject<GoogleAPIJSONCode.AddressComponent>(JSONcontents);
+            var JSONObj = JsonConvert.DeserializeObject<GoogleAPIJSONCode.RootObject>(JSONcontents);
 
-            string JSONlongName = JSONObj.long_name;
-            string JSONshortname = JSONObj.short_name;
+            
+            
 
-            Console.WriteLine(JSONlongName);
-            Console.WriteLine(JSONshortname);
+            foreach (var res in JSONObj.results)
+            {
+                Console.WriteLine(res.address_components);
+
+                Console.WriteLine("*********************");
+                Console.WriteLine("Outputting Address Components");
+                Console.WriteLine("*********************");
+                foreach (var innerRes in res.address_components)
+                {
+
+                    Console.WriteLine(innerRes.long_name);
+                }
+            }
+            
+            //GoogleAPIJSONCode.RootObject JSONObj2 = JsonConvert.DeserializeObject<GoogleAPIJSONCode.RootObject>(JSONcontents);
+
+            
+
+            
+            //Console.WriteLine(JSONObj2.)
 
             Console.WriteLine("*********************");
 
