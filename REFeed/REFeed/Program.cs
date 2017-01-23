@@ -36,6 +36,17 @@ namespace REFeed
             query.CommandType = CommandType.Text;
             query.Connection = cnn;
 
+            string url = "https://maps.googleapis.com/maps/api/geocode/json?address=145+Greenwood+Estate,Togher,Cork&key=AIzaSyDGtABIyvMtekqCCD5dKSDGCn3mANVpvME";
+
+            using (WebClient client = new WebClient())
+            {
+                string s = client.DownloadString(url);
+
+                Console.WriteLine("Reading downloaded string");
+
+                Console.WriteLine(s);
+            }
+
             //open cnn
             try
             {
@@ -49,6 +60,12 @@ namespace REFeed
                 Console.WriteLine("ping failed!");
             }
 
+           
+
+            
+
+            //Console.WriteLine(s);
+
             //query db for person information
             try
             {
@@ -57,13 +74,16 @@ namespace REFeed
 
                 if (reader.HasRows)
                 {
-                    Console.WriteLine("Reader has rows");
+                    Console.WriteLine("Reader has rows\n");
 
                     //control the loop - use a second while condition (while i < loopControl, i++)
                     int i = 0;
 
                     while (i < loopControl && reader.Read())
                     {
+                        //Keep Track of loop
+                        Console.WriteLine("This is iteration of Loop number...." + i + "\n");
+                        
                         //use SortAddresses method to sort sort addresses into Google API readable format
 
                         Console.WriteLine("Output Column data");
@@ -79,7 +99,17 @@ namespace REFeed
                         
                         sortedAddr = SortAddresses(unsortedAddr, googleAPIKey);
                         Console.WriteLine("Output of SortAddresses: " + sortedAddr);
-                        
+
+                        using (WebClient client = new WebClient())
+                        {
+                            string s = client.DownloadString(sortedAddr);
+
+                            Console.WriteLine("Reading downloaded string");
+
+                            Console.WriteLine(s + "\n\n");
+                        }
+
+                        /*
                         string googleURL = sortedAddr;
                         string returncode = "";
 
@@ -97,10 +127,10 @@ namespace REFeed
                         Console.WriteLine(source);
 
                         Console.WriteLine(returncode);
-                        
-                        Console.WriteLine("Address (County): " + reader.GetString(18));
+                        */
+                        //Console.WriteLine("Address (County): " + reader.GetString(18));
 
-                        Console.WriteLine("Address (Country): " + reader.GetString(20));
+                        //Console.WriteLine("Address (Country): " + reader.GetString(20));
                         Console.WriteLine(" ");
 
                         i++;
@@ -121,7 +151,7 @@ namespace REFeed
 
             string JSONcontents = File.ReadAllText(@"C:\Users\ccreaghpeschau\Documents\REFeed\JSON1.json");
             
-            //Console.WriteLine(JSONcontents);
+            Console.WriteLine(JSONcontents);
 
 
             Console.WriteLine("*********************");
@@ -135,7 +165,7 @@ namespace REFeed
 
             foreach (var res in JSONObj.results)
             {
-                Console.WriteLine(res.address_components);
+                //Console.WriteLine(res.address_components);
 
                 Console.WriteLine("*********************");
                 Console.WriteLine("Outputting Address Components");
@@ -166,6 +196,9 @@ namespace REFeed
             Console.ReadKey();
         }
 
+        //separating out functions into methods for cleaner code
+
+        //method to take unsorted address details and compile them into a URL
         static string SortAddresses (string unsortedAddress, string APIKey)
         {
             
