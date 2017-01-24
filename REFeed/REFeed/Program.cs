@@ -56,7 +56,7 @@ namespace REFeed
             try
             {
                 reader = query.ExecuteReader();
-                Console.WriteLine("Reader executed");
+                Console.WriteLine("DB Reader executed");
 
                 if (reader.HasRows)
                 {
@@ -86,38 +86,22 @@ namespace REFeed
                         sortedAddr = SortAddresses(unsortedAddr, googleAPIKey);
                         Console.WriteLine("Output of SortAddresses: " + sortedAddr + "\n");
 
-                        using (WebClient client = new WebClient())
+                        try
                         {
-                            string s = client.DownloadString(sortedAddr);
+                            string html = new WebClient().DownloadString(sortedAddr);
 
-                            Console.WriteLine("Reading downloaded string");
-
-                            Console.WriteLine(s + "\n\n");
+                            Console.WriteLine(html);
+                        }
+                        catch
+                        {
+                            Console.WriteLine("Could not download JSON String\n");
                         }
 
-                        /*
-                        string googleURL = sortedAddr;
-                        string returncode = "";
-
                         
-                        WebRequest req = HttpWebRequest.Create(googleURL);
-                        req.Method = "GET";
-
-                        string source;
-                        using (StreamReader URLreader = new StreamReader(req.GetResponse().GetResponseStream()))
-                        {
-                            source = URLreader.ReadToEnd();
-                        }
-                        
-
-                        Console.WriteLine(source);
-
-                        Console.WriteLine(returncode);
-                        */
                         //Console.WriteLine("Address (County): " + reader.GetString(18));
 
                         //Console.WriteLine("Address (Country): " + reader.GetString(20));
-                        Console.WriteLine(" ");
+                        Console.WriteLine("\n\n");
 
                         i++;
                         
