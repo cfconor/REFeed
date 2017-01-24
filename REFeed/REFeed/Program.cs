@@ -36,22 +36,12 @@ namespace REFeed
             query.CommandType = CommandType.Text;
             query.Connection = cnn;
 
-            string url = "https://maps.googleapis.com/maps/api/geocode/json?address=145+Greenwood+Estate,Togher,Cork&key=AIzaSyDGtABIyvMtekqCCD5dKSDGCn3mANVpvME";
-
-            using (WebClient client = new WebClient())
-            {
-                string s = client.DownloadString(url);
-
-                Console.WriteLine("Reading downloaded string");
-
-                Console.WriteLine(s);
-            }
-
+            
             //open cnn
             try
             {
                 cnn.Open();
-                Console.WriteLine("pinged server!");
+                Console.WriteLine("pinged DB server!");
                 
 
             }
@@ -61,10 +51,6 @@ namespace REFeed
             }
 
            
-
-            
-
-            //Console.WriteLine(s);
 
             //query db for person information
             try
@@ -98,7 +84,7 @@ namespace REFeed
                         unsortedAddr = reader.GetString(16);
                         
                         sortedAddr = SortAddresses(unsortedAddr, googleAPIKey);
-                        Console.WriteLine("Output of SortAddresses: " + sortedAddr);
+                        Console.WriteLine("Output of SortAddresses: " + sortedAddr + "\n");
 
                         using (WebClient client = new WebClient())
                         {
@@ -151,7 +137,7 @@ namespace REFeed
 
             string JSONcontents = File.ReadAllText(@"C:\Users\ccreaghpeschau\Documents\REFeed\JSON1.json");
             
-            Console.WriteLine(JSONcontents);
+            //Console.WriteLine(JSONcontents);
 
 
             Console.WriteLine("*********************");
