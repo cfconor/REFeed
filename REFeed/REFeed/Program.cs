@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.IO;
 using Newtonsoft.Json;
-
+using System.Collections.Generic;
 
 namespace REFeed
 
@@ -24,9 +24,13 @@ namespace REFeed
             string googleAPIKey = "AIzaSyDGtABIyvMtekqCCD5dKSDGCn3mANVpvME";
             string unsortedAddr = null;
             string sortedAddr = null;
+            
+            List<Dictionary<string, string>> rows = new List<Dictionary<string, string>>();
+            Dictionary<string, string> column;
 
-            cnnString = "Server=lazarus.ucc.ie;Database=UCC;Trusted_Connection=True;";
-            DBQuery = "select * from ITSPRD..RENC_IF.RAISERS_EDGE_EXTRACT where ESRCLASSOF = '2016'";
+
+                 cnnString = "Server=lazarus.ucc.ie;Database=UCC;Trusted_Connection=True;";
+            DBQuery = "select * from ITSPRD..RENC_IF.RAISERS_EDGE_EXTRACT where ESRCLASSOF = '2016' order by LastName ASC";
 
             SqlConnection cnn = new SqlConnection(cnnString);
             SqlCommand query = new SqlCommand();
@@ -62,6 +66,8 @@ namespace REFeed
                 {
                     Console.WriteLine("Reader has rows\n");
 
+                    
+
                     //control the loop - use a second while condition (while i < loopControl, i++)
                     int i = 0;
 
@@ -69,22 +75,93 @@ namespace REFeed
                     {
                         //Keep Track of loop
                         Console.WriteLine("This is iteration of Loop number...." + i + "\n");
-                        
+
+                        string jsonFilePath = @"C:\Users\ccreaghpeschau\Documents\REFeed\JSON" + i + ".json";
+
                         //use SortAddresses method to sort sort addresses into Google API readable format
 
-                        Console.WriteLine("Output Column data");
+                        column = new Dictionary<string, string>();
 
-                        Console.WriteLine("Name: " + reader.GetString(10) + " " + reader.GetString(9));
 
-                        Console.WriteLine("Class of: " + reader.GetString(39));
+                        try
+                        {
+                            column["IBSNQFLEV"] = reader["IBSNQFLEV"].ToString();
+                            column["ESRDateEnt"] = reader["ESRDateEnt"].ToString();
+                            column["ImportId"] = reader["ImportId"].ToString();
+                            column["AddrImpid"] = reader["AddrImpid"].ToString();
+                            column["PhoneAddrImpId"] = reader["PhoneAddrImpId"].ToString();
+                            column["PhoneImpId"] = reader["PhoneImpId"].ToString();
+                            column["CAttrImpId"] = reader["CAttrImpId"].ToString();
+                            column["ESRImpId"] = reader["ESRImpId"].ToString();
+                            column["KeyInd"] = reader["KeyInd"].ToString();
+                            column["PrimSalEdit"] = reader["PrimSalEdit"].ToString();
+                            column["LastName"] = reader["LastName"].ToString();
+                            column["FirstName"] = reader["FirstName"].ToString();
+                            column["PrimSalText"] = reader["PrimSalText"].ToString();
+                            column["NickName"] = reader["NickName"].ToString();
+                            column["MidName"] = reader["MidName"].ToString();
+                            column["Titl1"] = reader["Titl1"].ToString();
+                            column["Gender"] = reader["Gender"].ToString();
+                            column["AddrLines"] = reader["AddrLines"].ToString();
+                            column["AddrCity"] = reader["AddrCity"].ToString();
+                            column["AddrCounty"] = reader["AddrCounty"].ToString();
+                            column["LEN_COUNTY"] = reader["LEN_COUNTY"].ToString();
+                            column["AddrCountry"] = reader["AddrCountry"].ToString();
+                            column["LEN_COUNTRY"] = reader["LEN_COUNTRY"].ToString();
+                            column["AddrZip"] = reader["AddrZip"].ToString();
+                            column["BDay"] = reader["BDay"].ToString();
+                            column["PhoneNum1"] = reader["PhoneNum1"].ToString();
+                            column["PhoneType1"] = reader["PhoneType1"].ToString();
+                            column["PhoneNum2"] = reader["PhoneNum2"].ToString();
+                            column["PhoneType2"] = reader["PhoneType2"].ToString();
+                            column["ConsID"] = reader["ConsID"].ToString();
+                            column["CAttrCat1"] = reader["CAttrCat1"].ToString();
+                            column["CAttrDesc1"] = reader["CAttrDesc1"].ToString();
+                            column["CAttrCat2"] = reader["CAttrCat2"].ToString();
+                            column["CAttrDesc2"] = reader["CAttrDesc2"].ToString();
+                            column["CAttrCat3"] = reader["CAttrCat3"].ToString();
+                            column["CAttrDesc3"] = reader["CAttrDesc3"].ToString();
+                            column["CAttrCat4"] = reader["CAttrCat4"].ToString();
+                            column["CAttrDesc4"] = reader["CAttrDesc4"].ToString();
+                            column["ESRCampus"] = reader["ESRCampus"].ToString();
+                            column["ESRDegree"] = reader["ESRDegree"].ToString();
+                            column["ESRClassOf"] = reader["ESRClassOf"].ToString();
+                            column["ESRDateEnt"] = reader["ESRDateEnt"].ToString();
+                            column["PrimAddID"] = reader["PrimAddID"].ToString();
+                            column["ConsCode"] = reader["ConsCode"].ToString();
+                            column["ESRSchoolName"] = reader["ESRSchoolName"].ToString();
+                            column["ESRPrimAlum"] = reader["ESRPrimAlum"].ToString();
+                            column["Suff1"] = reader["Suff1"].ToString();
+                            column["QUAL_TYPE_DESC"] = reader["QUAL_TYPE_DESC"].ToString();
+                            column["UNDER_POSTGRAD"] = reader["UNDER_POSTGRAD"].ToString();
+                            column["QUAL_LEVEL_TYPE"] = reader["QUAL_LEVEL_TYPE"].ToString();
+                            column["POSTGRAD_TYPE"] = reader["POSTGRAD_TYPE"].ToString();
+                            column["MASTERS_DOCTORAL"] = reader["MASTERS_DOCTORAL"].ToString();
+                            column["NQF_LEVEL"] = reader["NQF_LEVEL"].ToString();
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Cannot assign Dictionary elems");
+                            Console.WriteLine(e);
+                        }
 
-                        Console.WriteLine("Address (Lines): " + reader.GetString(16));
-
-                        //use SortAddresses Method to format addresses into Google API URLS
-                        unsortedAddr = reader.GetString(16);
                         
-                        sortedAddr = SortAddresses(unsortedAddr, googleAPIKey);
-                        Console.WriteLine("Output of SortAddresses: " + sortedAddr + "\n");
+
+                        Console.WriteLine("jsonFilePath is: " + jsonFilePath + "\n\n");
+                        
+                        string Admin1 = JSONDeserializer("administrative_area_level_1", jsonFilePath);
+                        string Admin2 = JSONDeserializer("administrative_area_level_2", jsonFilePath);
+                        string Locality = JSONDeserializer("locality", jsonFilePath);
+
+                        column["administrative_area_level_1"] = Admin1;
+                        column["administrative_area_level_2"] = Admin2;
+                        column["Locality"] = Locality;
+                        column["OnREFlag"] = "false";
+
+
+                        rows.Add(column);
+
+
 
                         try
                         {
@@ -103,6 +180,10 @@ namespace REFeed
                         //Console.WriteLine("Address (Country): " + reader.GetString(20));
                         Console.WriteLine("\n\n");
 
+
+
+
+
                         i++;
                         
                     }
@@ -115,51 +196,39 @@ namespace REFeed
                 Console.WriteLine("query failed");
             }
 
-            //output reader data
-
-            //declare variables for deserialized JSON
-
-            string JSONcontents = File.ReadAllText(@"C:\Users\ccreaghpeschau\Documents\REFeed\JSON1.json");
-            
-            //Console.WriteLine(JSONcontents);
-
-
-            Console.WriteLine("*********************");
-            Console.WriteLine("Deserializing....");
+            Console.WriteLine("Showing Output of Dictionary...");
             Console.WriteLine("*********************");
 
-            var JSONObj = JsonConvert.DeserializeObject<GoogleAPIJSONCode.RootObject>(JSONcontents);
+            string csvPath = @"C:\Users\ccreaghpeschau\Documents\REFeed\csvoutput.csv";
 
-            
-            
+            File.WriteAllText(csvPath, "");
 
-            foreach (var res in JSONObj.results)
+            StringBuilder csvFormatted = new StringBuilder();
+
+            foreach (Dictionary<string, string> columnRead in rows)
             {
-                //Console.WriteLine(res.address_components);
-
-                Console.WriteLine("*********************");
-                Console.WriteLine("Outputting Address Components");
-                Console.WriteLine("*********************");
-                foreach (var innerRes in res.address_components)
+                foreach (string colVal in columnRead.Values)
                 {
+                    csvFormatted.Append(colVal + "|");
 
-                    Console.WriteLine(innerRes.long_name);
+
                 }
+
+                File.WriteAllText(csvPath, (csvFormatted.ToString() + Environment.NewLine));
+
+                csvFormatted.Append("\n");
+
+                
             }
-            
-            //GoogleAPIJSONCode.RootObject JSONObj2 = JsonConvert.DeserializeObject<GoogleAPIJSONCode.RootObject>(JSONcontents);
 
+            Console.WriteLine(csvFormatted.ToString());
             
-
             
-            //Console.WriteLine(JSONObj2.)
-
             Console.WriteLine("*********************");
 
             //console output some variables from the JSON input
-
-            Console.WriteLine();
-
+            
+           
             cnn.Close();
             //for debugging, console stays open
             Console.WriteLine("Press any button to close....");
@@ -172,7 +241,7 @@ namespace REFeed
         static string SortAddresses (string unsortedAddress, string APIKey)
         {
             
-            string googleURL = "https://maps.googleapis.com/maps/api/geocode/json?";
+            string googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
             StringBuilder outputAddress = new StringBuilder(googleURL);
             string finalAddress = "";
 
@@ -180,21 +249,83 @@ namespace REFeed
 
             string[] words = unsortedAddress.Split(delimiterStrings, StringSplitOptions.None);
 
+            APIKey = "&key" + APIKey;
+
             foreach (string s in words)
             {
                 outputAddress.Append(s + "+"); 
             }
-            
+
+            outputAddress.Append(APIKey);
+
             finalAddress = outputAddress.ToString();
+
+
 
             //sortedAddress = unsortedAddress;
 
             return finalAddress;
         }
 
+        static string JSONDeserializer (string reqType, string filePath)
+        {
+            
+            Console.WriteLine("Deserializing....");
+            Console.WriteLine("*********************");
 
+            string JSONcontents = File.ReadAllText(filePath);
+            string outputData = "";
+            bool lastLocality = false;
+            string localityHolder = "";
+            var JSONObj = JsonConvert.DeserializeObject<GoogleAPIJSONCode.RootObject>(JSONcontents);
+
+            foreach (var res in JSONObj.results)
+            {
+                //Console.WriteLine(res.address_components);
+
+                
+                foreach (var innerRes in res.address_components)
+                {
+                    
+                    if(innerRes.types[0].Equals(reqType))
+                    {
+                       
+                        if (innerRes.types[0].Equals("locality") && lastLocality == true)
+                        {
+                            outputData = localityHolder + ", " + innerRes.long_name;
+                            Console.WriteLine(outputData);
+                            return outputData;
+
+                        }
+                        else if (innerRes.types[0].Equals("locality") && lastLocality == false)
+                        {
+                            localityHolder = innerRes.long_name;
+
+                            lastLocality = true;
+                        }
+                        else //not type locality
+                        {
+
+                            outputData = innerRes.long_name;
+                            lastLocality = false;
+                            
+                        }
+                        
+
+                    }
+                    
+                }
+                
+            }
+            Console.WriteLine(reqType + ": " + outputData);
+            return outputData;
+
+        }
+
+            
+            
 
     }
-    
+
     
 }
