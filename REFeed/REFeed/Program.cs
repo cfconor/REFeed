@@ -45,7 +45,7 @@ namespace REFeed
             query.CommandType = CommandType.Text;
             query.Connection = cnn;
 
-            string url = "http://www.google.com";
+            
 
             //connect to existing students table in RE to match REFlag results
             SqlConnection cnn2 = new SqlConnection(cnnString);
@@ -223,13 +223,19 @@ namespace REFeed
 
                         //Make requests to Google API
 
+                        string url;
 
+                        url = SortAddresses(column["AddrLines"], googleAPIKey);
+
+                        Console.WriteLine("The Output address for this user is..... " + url);
 
                         try
                         {
                             using (WebClient client = new WebClient())
                             {
                                 string s = client.DownloadString(url);
+
+                                
 
                                 Console.WriteLine(s);
 
@@ -329,7 +335,7 @@ namespace REFeed
         //separating out functions into methods for cleaner code
 
         //method to take unsorted address details and compile them into a URL
-        static string SortAddresses (string unsortedAddress, string APIKey)
+        static string SortAddresses (string unsortedAddress, string inputAPIKey)
         {
             
             string googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
@@ -340,7 +346,7 @@ namespace REFeed
 
             string[] words = unsortedAddress.Split(delimiterStrings, StringSplitOptions.None);
 
-            APIKey = "&key" + APIKey;
+            string APIKey = "&key" + inputAPIKey;
 
             foreach (string s in words)
             {
@@ -351,7 +357,7 @@ namespace REFeed
 
             finalAddress = outputAddress.ToString();
 
-
+            //Console.WriteLine("The Output address for this user is..... " + finalAddress);
 
             //sortedAddress = unsortedAddress;
 
