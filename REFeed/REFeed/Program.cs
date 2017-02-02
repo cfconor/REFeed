@@ -20,6 +20,7 @@ namespace REFeed
         {
             string cnnString = null;
             string DBQuery = null;
+            
             int loopControl = 5;
             string googleAPIKey = "AIzaSyDGtABIyvMtekqCCD5dKSDGCn3mANVpvME";
             string unsortedAddr = null;
@@ -31,21 +32,30 @@ namespace REFeed
 
                  cnnString = "Server=lazarus.ucc.ie;Database=UCC;Trusted_Connection=True;";
             DBQuery = "select * from ITSPRD..RENC_IF.RAISERS_EDGE_EXTRACT where ESRCLASSOF = '2016' order by LastName ASC";
+            
+
+            
 
             SqlConnection cnn = new SqlConnection(cnnString);
             SqlCommand query = new SqlCommand();
             SqlDataReader reader;
+            
 
             query.CommandText = DBQuery;
             query.CommandType = CommandType.Text;
             query.Connection = cnn;
 
+            string url = "http://www.google.com";
+
+            //connect to existing students table in RE to match REFlag results
+            SqlConnection cnn2 = new SqlConnection(cnnString);
             
+
             //open cnn
             try
             {
                 cnn.Open();
-                Console.WriteLine("pinged DB server!");
+                Console.WriteLine("pinged DB server!\n");
                 
 
             }
@@ -54,7 +64,17 @@ namespace REFeed
                 Console.WriteLine("ping failed!");
             }
 
-           
+            try
+            {
+                cnn2.Open();
+                Console.WriteLine("connected to  Raisers Edge DB server for entry matching!\n");
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            
 
             //query db for person information
             try
@@ -82,7 +102,7 @@ namespace REFeed
 
                         column = new Dictionary<string, string>();
 
-
+                        //assign all ITSDB columns into dictionary for easy manipulation
                         try
                         {
                             column["IBSNQFLEV"] = reader["IBSNQFLEV"].ToString();
@@ -138,6 +158,8 @@ namespace REFeed
                             column["POSTGRAD_TYPE"] = reader["POSTGRAD_TYPE"].ToString();
                             column["MASTERS_DOCTORAL"] = reader["MASTERS_DOCTORAL"].ToString();
                             column["NQF_LEVEL"] = reader["NQF_LEVEL"].ToString();
+
+                            
                         }
                         catch (Exception e)
                         {
@@ -146,6 +168,81 @@ namespace REFeed
                         }
 
                         
+                        
+                        //match against existing RE records!!!
+                        
+                        string IDtoMatch = column["ConsID"];
+                        string REQuery = "select FIRST_NAME,MIDDLE_NAME,KEY_NAME,TEXT from[UCC].[dbo].[CONSTITUENT] inner join[UCC].[dbo].[ConstituentAttributes] on[CONSTITUENT].RECORDS_ID = [ConstituentAttributes].PARENTID inner join[UCC].[dbo].[AttributeTypes] on[ConstituentAttributes].ATTRIBUTETYPESID = [AttributeTypes].ATTRIBUTETYPESID where upper(DESCRIPTION)  like '%STUDENT%ID%' AND TEXT = '" + IDtoMatch + "'";
+                        string REFlag = "false";
+
+
+
+
+                        Console.WriteLine(IDtoMatch);
+
+                        try
+                        {
+                            SqlCommand REquery = new SqlCommand();
+                            SqlDataReader REreader;
+
+                            REquery.CommandText = REQuery;
+                            REquery.CommandType = CommandType.Text;
+                            REquery.Connection = cnn2;
+                            
+                            REreader = REquery.ExecuteReader();
+
+                            if (REreader.HasRows == true)
+                            {
+                                while(REreader.Read())
+                                {
+                                    //Console.WriteLine(REreader["FIRST_NAME"].ToString());
+                                    //Console.WriteLine(REreader["MIDDLE_NAME"].ToString());
+                                    //Console.WriteLine(REreader["KEY_NAME"].ToString());
+                                    //Console.WriteLine(REreader["TEXT"].ToString());
+                                    
+
+                                    REFlag = "true";
+
+                                }
+                            }
+                            else //reader has no rows, user is not in Raisers Edge
+                            {
+                                REFlag = "false";
+                            }
+
+
+
+
+                            REreader.Close();
+                        }
+                        catch(Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+
+                        //Make requests to Google API
+
+
+
+                        try
+                        {
+                            using (WebClient client = new WebClient())
+                            {
+                                string s = client.DownloadString(url);
+
+                                Console.WriteLine(s);
+
+                            }
+                        }
+                        catch(Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+
+
+                        //add Admin1, Admin2 and Locality to code if returned
 
                         Console.WriteLine("jsonFilePath is: " + jsonFilePath + "\n\n");
                         
@@ -156,23 +253,16 @@ namespace REFeed
                         column["administrative_area_level_1"] = Admin1;
                         column["administrative_area_level_2"] = Admin2;
                         column["Locality"] = Locality;
-                        column["OnREFlag"] = "false";
+                        column["OnREFlag"] = REFlag;
 
 
                         rows.Add(column);
 
+                        
 
+                        
 
-                        try
-                        {
-                            string html = new WebClient().DownloadString(sortedAddr);
-
-                            Console.WriteLine(html);
-                        }
-                        catch
-                        {
-                            Console.WriteLine("Could not download JSON String\n");
-                        }
+                        
 
                         
                         //Console.WriteLine("Address (County): " + reader.GetString(18));
@@ -189,12 +279,14 @@ namespace REFeed
                     }
                     reader.Close();
                 }
-                Console.WriteLine("queried the DB");
+                Console.WriteLine("queried the ITSDB");
             }
             catch
             {
                 Console.WriteLine("query failed");
             }
+
+
 
             Console.WriteLine("Showing Output of Dictionary...");
             Console.WriteLine("*********************");
@@ -210,8 +302,7 @@ namespace REFeed
                 foreach (string colVal in columnRead.Values)
                 {
                     csvFormatted.Append(colVal + "|");
-
-
+                    
                 }
 
                 File.WriteAllText(csvPath, (csvFormatted.ToString() + Environment.NewLine));
@@ -300,7 +391,7 @@ namespace REFeed
                         else if (innerRes.types[0].Equals("locality") && lastLocality == false)
                         {
                             localityHolder = innerRes.long_name;
-
+                            
                             lastLocality = true;
                         }
                         else //not type locality
@@ -322,7 +413,12 @@ namespace REFeed
 
         }
 
-            
+         bool entryMatch(string toMatch, string queryToMatch)
+        {
+
+
+            return false;
+        }   
             
 
     }
