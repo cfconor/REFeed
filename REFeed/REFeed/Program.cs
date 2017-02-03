@@ -233,11 +233,11 @@ namespace REFeed
                         {
                             using (WebClient client = new WebClient())
                             {
-                                string s = client.DownloadString(url);
+                                string pageContents = client.DownloadString(url);
 
                                 
 
-                                Console.WriteLine(s);
+                                Console.WriteLine(pageContents);
 
                             }
                         }
