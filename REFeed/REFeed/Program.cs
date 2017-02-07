@@ -226,6 +226,7 @@ namespace REFeed
                         string url;
 
                         url = SortAddresses(column["AddrLines"], googleAPIKey);
+                        string pageContents = "";
 
                         Console.WriteLine("The Output address for this user is..... " + url);
 
@@ -233,7 +234,7 @@ namespace REFeed
                         {
                             using (WebClient client = new WebClient())
                             {
-                                string pageContents = client.DownloadString(url);
+                                pageContents = client.DownloadString(url);
 
                                 
 
@@ -250,36 +251,21 @@ namespace REFeed
 
                         //add Admin1, Admin2 and Locality to code if returned
 
-                        Console.WriteLine("jsonFilePath is: " + jsonFilePath + "\n\n");
+                        //Console.WriteLine("jsonFilePath is: " + jsonFilePath + "\n\n");
                         
-                        string Admin1 = JSONDeserializer("administrative_area_level_1", jsonFilePath);
-                        string Admin2 = JSONDeserializer("administrative_area_level_2", jsonFilePath);
-                        string Locality = JSONDeserializer("locality", jsonFilePath);
+                        string Admin1 = JSONDeserializer("administrative_area_level_1", pageContents);
+                        string Admin2 = JSONDeserializer("administrative_area_level_2", pageContents);
+                        string Locality = JSONDeserializer("locality", pageContents);
 
                         column["administrative_area_level_1"] = Admin1;
                         column["administrative_area_level_2"] = Admin2;
                         column["Locality"] = Locality;
                         column["OnREFlag"] = REFlag;
-
-
+                        
                         rows.Add(column);
-
                         
-
-                        
-
-                        
-
-                        
-                        //Console.WriteLine("Address (County): " + reader.GetString(18));
-
-                        //Console.WriteLine("Address (Country): " + reader.GetString(20));
                         Console.WriteLine("\n\n");
-
-
-
-
-
+                        
                         i++;
                         
                     }
@@ -287,9 +273,10 @@ namespace REFeed
                 }
                 Console.WriteLine("queried the ITSDB");
             }
-            catch
+            catch(Exception e)
             {
                 Console.WriteLine("query failed");
+                Console.WriteLine(e);
             }
 
 
@@ -370,8 +357,8 @@ namespace REFeed
             Console.WriteLine("Deserializing....");
             Console.WriteLine("*********************");
 
-            string JSONcontents = File.ReadAllText(filePath);
-            string outputData = "";
+            string JSONcontents = filePath;
+            string outputData = "NOT CAUGHT IN IF OR ELSE";
             bool lastLocality = false;
             string localityHolder = "";
             var JSONObj = JsonConvert.DeserializeObject<GoogleAPIJSONCode.RootObject>(JSONcontents);
@@ -383,34 +370,51 @@ namespace REFeed
                 
                 foreach (var innerRes in res.address_components)
                 {
-                    
-                    if(innerRes.types[0].Equals(reqType))
-                    {
-                       
-                        if (innerRes.types[0].Equals("locality") && lastLocality == true)
-                        {
-                            outputData = localityHolder + ", " + innerRes.long_name;
-                            Console.WriteLine(outputData);
-                            return outputData;
+                    Console.WriteLine("The stuff in innerRes.types[0] is: " + innerRes.types[0]);
 
-                        }
-                        else if (innerRes.types[0].Equals("locality") && lastLocality == false)
-                        {
-                            localityHolder = innerRes.long_name;
-                            
-                            lastLocality = true;
-                        }
-                        else //not type locality
-                        {
+                   //cycle through innerRes types
+                   
 
-                            outputData = innerRes.long_name;
-                            lastLocality = false;
+
+                    if (innerRes.types[0].Equals(reqType))
+                        {
+                            outputData = "CAUGHT IN IF";
+
                             
-                        }
+                            
+
+
+                        //Console.WriteLine("The empty thing in inner res iss......." + innerRes.types[0]);
+                            if (innerRes.types[0].Equals("locality") && lastLocality == true)
+                                {
+                                    outputData = localityHolder + ", " + innerRes.long_name;
+                                    Console.WriteLine(outputData);
+                                    return outputData;
+
+                                }
+                                else if (innerRes.types[0].Equals("locality") && lastLocality == false)
+                                {
+                                    localityHolder = innerRes.long_name;
+                            
+                                    lastLocality = true;
+                                }
+                                else //not type locality
+                                {
+
+                                    outputData = innerRes.long_name;
+                                    lastLocality = false;
+                            
+                                }
                         
 
-                    }
-                    
+                        }
+                        else
+                        {
+                        Console.WriteLine("CHECKING FOR EMPTY RESULTS... " + "innerRes.types[0]: " + innerRes.types[0] + " reqType: " + reqType);
+                        
+                        outputData = "EMPTY";
+                        }
+
                 }
                 
             }
