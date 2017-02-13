@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.IO;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace REFeed
 
@@ -94,12 +95,12 @@ namespace REFeed
                     while (i < loopControl && reader.Read())
                     {
                         //Keep Track of loop
+                        Console.WriteLine("*********************");
                         Console.WriteLine("This is iteration of Loop number...." + i + "\n");
 
-                        string jsonFilePath = @"C:\Users\ccreaghpeschau\Documents\REFeed\JSON" + i + ".json";
+                        //string jsonFilePath = @"C:\Users\ccreaghpeschau\Documents\REFeed\JSON" + i + ".json";
 
-                        //use SortAddresses method to sort sort addresses into Google API readable format
-
+                        
                         column = new Dictionary<string, string>();
 
                         //assign all ITSDB columns into dictionary for easy manipulation
@@ -221,8 +222,8 @@ namespace REFeed
                         }
 
 
-                        //Make requests to Google API
-
+                        //use SortAddresses method to sort sort addresses into Google API readable format
+                        
                         string url;
 
                         url = SortAddresses(column["AddrLines"], googleAPIKey);
@@ -238,7 +239,7 @@ namespace REFeed
 
                                 
 
-                                Console.WriteLine(pageContents);
+                                //Console.WriteLine(pageContents);
 
                             }
                         }
@@ -351,74 +352,45 @@ namespace REFeed
             return finalAddress;
         }
 
-        static string JSONDeserializer (string reqType, string filePath)
+        static string JSONDeserializer (string reqType, string urlcontents)
         {
             
             Console.WriteLine("Deserializing....");
-            Console.WriteLine("*********************");
+            
 
-            string JSONcontents = filePath;
-            string outputData = "NOT CAUGHT IN IF OR ELSE";
+            string JSONcontents = urlcontents;
+            string outputData = "NULL";
             bool lastLocality = false;
             string localityHolder = "";
             var JSONObj = JsonConvert.DeserializeObject<GoogleAPIJSONCode.RootObject>(JSONcontents);
 
-            foreach (var res in JSONObj.results)
+            //if not OK, no elements in JSONObj.results, implies the query had had no data for the address. i.e no returned data for Admin1, Admin2, Locality
+            if (JSONObj.status.Equals("OK"))
             {
-                //Console.WriteLine(res.address_components);
-
-                
-                foreach (var innerRes in res.address_components)
+                foreach (var res in JSONObj.results)
                 {
-                    Console.WriteLine("The stuff in innerRes.types[0] is: " + innerRes.types[0]);
-
-                   //cycle through innerRes types
-                   
-
-
-                    if (innerRes.types[0].Equals(reqType))
+                    foreach (var innerRes1 in res.address_components)
+                    {
+                        if(innerRes1.types.Contains(reqType))
                         {
-                            outputData = "CAUGHT IN IF";
-
-                            
-                            
-
-
-                        //Console.WriteLine("The empty thing in inner res iss......." + innerRes.types[0]);
-                            if (innerRes.types[0].Equals("locality") && lastLocality == true)
-                                {
-                                    outputData = localityHolder + ", " + innerRes.long_name;
-                                    Console.WriteLine(outputData);
-                                    return outputData;
-
-                                }
-                                else if (innerRes.types[0].Equals("locality") && lastLocality == false)
-                                {
-                                    localityHolder = innerRes.long_name;
-                            
-                                    lastLocality = true;
-                                }
-                                else //not type locality
-                                {
-
-                                    outputData = innerRes.long_name;
-                                    lastLocality = false;
-                            
-                                }
-                        
-
+                            outputData = innerRes1.long_name;
+                            Console.WriteLine(outputData);
+                            return outputData;
                         }
-                        else
-                        {
-                        Console.WriteLine("CHECKING FOR EMPTY RESULTS... " + "innerRes.types[0]: " + innerRes.types[0] + " reqType: " + reqType);
-                        
-                        outputData = "EMPTY";
-                        }
-
+                    }
                 }
-                
             }
-            Console.WriteLine(reqType + ": " + outputData);
+
+               
+                
+
+            
+
+            
+
+
+
+            Console.WriteLine(reqType + ": " + outputData + "\n");
             return outputData;
 
         }
