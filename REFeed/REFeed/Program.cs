@@ -22,7 +22,7 @@ namespace REFeed
             string cnnString = null;
             string DBQuery = null;
             
-            int loopControl = 5;
+            int loopControl = 500;
             string googleAPIKey = "AIzaSyDGtABIyvMtekqCCD5dKSDGCn3mANVpvME";
             string unsortedAddr = null;
             string sortedAddr = null;
@@ -360,8 +360,9 @@ namespace REFeed
 
             string JSONcontents = urlcontents;
             string outputData = "NULL";
-            bool lastLocality = false;
-            string localityHolder = "";
+            var collectedStuff = new List<string>();
+            StringBuilder outputStuff = new StringBuilder();
+
             var JSONObj = JsonConvert.DeserializeObject<GoogleAPIJSONCode.RootObject>(JSONcontents);
 
             //if not OK, no elements in JSONObj.results, implies the query had had no data for the address. i.e no returned data for Admin1, Admin2, Locality
@@ -373,12 +374,48 @@ namespace REFeed
                     {
                         if(innerRes1.types.Contains(reqType))
                         {
-                            outputData = innerRes1.long_name;
-                            Console.WriteLine(outputData);
-                            return outputData;
+
+                            collectedStuff.Add(innerRes1.long_name);
+
+                            //Console.WriteLine(outputData);
+                            
+
+
                         }
                     }
                 }
+
+                
+
+
+                foreach (string elem in collectedStuff)
+                {
+                    if (elem.Equals("NULL"))
+                    {
+
+                    }
+                    else //push in the data from the collection to the StringBuilder object
+                    {
+                        outputStuff.Append(elem);
+                        outputStuff.Append(", ");
+                    }
+
+                    
+
+                    
+                }
+
+                outputData = outputStuff.ToString();
+
+                if(outputData.Length != 0 )
+                {
+                    outputData = outputData.Remove(outputData.Length - 2);
+                }
+                //push array strings into single string then set as outPutData
+
+                Console.WriteLine(reqType + ": " + outputData + "\n");
+
+                return outputData;
             }
 
                
