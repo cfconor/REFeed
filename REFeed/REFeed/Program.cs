@@ -3,11 +3,10 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Text;
 using System.Net;
-using System.Net.Http;
 using System.IO;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading;
 
 namespace REFeed
 
@@ -266,7 +265,10 @@ namespace REFeed
                         rows.Add(column);
                         
                         Console.WriteLine("\n\n");
-                        
+
+
+                        Thread.Sleep(1500);
+
                         i++;
                         
                     }
@@ -432,15 +434,7 @@ namespace REFeed
 
         }
 
-         bool entryMatch(string toMatch, string queryToMatch)
-        {
-
-
-            return false;
-        }   
-            
-
-    }
+         
 
     
 }
