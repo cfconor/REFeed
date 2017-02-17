@@ -7,6 +7,7 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Threading;
+using System.Web;
 
 namespace REFeed
 
@@ -20,43 +21,42 @@ namespace REFeed
         {
             string cnnString = null;
             string DBQuery = null;
-            
+
             int loopControl = 500;
             string googleAPIKey = "AIzaSyDGtABIyvMtekqCCD5dKSDGCn3mANVpvME";
-            string unsortedAddr = null;
-            string sortedAddr = null;
-            
+
+
             List<Dictionary<string, string>> rows = new List<Dictionary<string, string>>();
             Dictionary<string, string> column;
 
 
-                 cnnString = "Server=lazarus.ucc.ie;Database=UCC;Trusted_Connection=True;";
+            cnnString = "Server=lazarus.ucc.ie;Database=UCC;Trusted_Connection=True;";
             DBQuery = "select * from ITSPRD..RENC_IF.RAISERS_EDGE_EXTRACT where ESRCLASSOF = '2016' order by LastName ASC";
-            
 
-            
+
+
 
             SqlConnection cnn = new SqlConnection(cnnString);
             SqlCommand query = new SqlCommand();
             SqlDataReader reader;
-            
+
 
             query.CommandText = DBQuery;
             query.CommandType = CommandType.Text;
             query.Connection = cnn;
 
-            
+
 
             //connect to existing students table in RE to match REFlag results
             SqlConnection cnn2 = new SqlConnection(cnnString);
-            
+
 
             //open cnn
             try
             {
                 cnn.Open();
                 Console.WriteLine("pinged DB server!\n");
-                
+
 
             }
             catch
@@ -69,12 +69,12 @@ namespace REFeed
                 cnn2.Open();
                 Console.WriteLine("connected to  Raisers Edge DB server for entry matching!\n");
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine(e);
             }
 
-            
+
 
             //query db for person information
             try
@@ -86,7 +86,7 @@ namespace REFeed
                 {
                     Console.WriteLine("Reader has rows\n");
 
-                    
+
 
                     //control the loop - use a second while condition (while i < loopControl, i++)
                     int i = 0;
@@ -99,7 +99,7 @@ namespace REFeed
 
                         //string jsonFilePath = @"C:\Users\ccreaghpeschau\Documents\REFeed\JSON" + i + ".json";
 
-                        
+
                         column = new Dictionary<string, string>();
 
                         //assign all ITSDB columns into dictionary for easy manipulation
@@ -159,7 +159,7 @@ namespace REFeed
                             column["MASTERS_DOCTORAL"] = reader["MASTERS_DOCTORAL"].ToString();
                             column["NQF_LEVEL"] = reader["NQF_LEVEL"].ToString();
 
-                            
+
                         }
                         catch (Exception e)
                         {
@@ -167,10 +167,10 @@ namespace REFeed
                             Console.WriteLine(e);
                         }
 
-                        
-                        
+
+
                         //match against existing RE records!!!
-                        
+
                         string IDtoMatch = column["ConsID"];
                         string REQuery = "select FIRST_NAME,MIDDLE_NAME,KEY_NAME,TEXT from[UCC].[dbo].[CONSTITUENT] inner join[UCC].[dbo].[ConstituentAttributes] on[CONSTITUENT].RECORDS_ID = [ConstituentAttributes].PARENTID inner join[UCC].[dbo].[AttributeTypes] on[ConstituentAttributes].ATTRIBUTETYPESID = [AttributeTypes].ATTRIBUTETYPESID where upper(DESCRIPTION)  like '%STUDENT%ID%' AND TEXT = '" + IDtoMatch + "'";
                         string REFlag = "false";
@@ -188,18 +188,18 @@ namespace REFeed
                             REquery.CommandText = REQuery;
                             REquery.CommandType = CommandType.Text;
                             REquery.Connection = cnn2;
-                            
+
                             REreader = REquery.ExecuteReader();
 
                             if (REreader.HasRows == true)
                             {
-                                while(REreader.Read())
+                                while (REreader.Read())
                                 {
                                     //Console.WriteLine(REreader["FIRST_NAME"].ToString());
                                     //Console.WriteLine(REreader["MIDDLE_NAME"].ToString());
                                     //Console.WriteLine(REreader["KEY_NAME"].ToString());
                                     //Console.WriteLine(REreader["TEXT"].ToString());
-                                    
+
 
                                     REFlag = "true";
 
@@ -215,14 +215,14 @@ namespace REFeed
 
                             REreader.Close();
                         }
-                        catch(Exception e)
+                        catch (Exception e)
                         {
                             Console.WriteLine(e);
                         }
 
 
                         //use SortAddresses method to sort sort addresses into Google API readable format
-                        
+
                         string url;
 
                         url = SortAddresses(column["AddrLines"], googleAPIKey);
@@ -236,13 +236,13 @@ namespace REFeed
                             {
                                 pageContents = client.DownloadString(url);
 
-                                
+
 
                                 //Console.WriteLine(pageContents);
 
                             }
                         }
-                        catch(Exception e)
+                        catch (Exception e)
                         {
                             Console.WriteLine(e);
                         }
@@ -252,31 +252,31 @@ namespace REFeed
                         //add Admin1, Admin2 and Locality to code if returned
 
                         //Console.WriteLine("jsonFilePath is: " + jsonFilePath + "\n\n");
-                        
+
                         string Admin1 = JSONDeserializer("administrative_area_level_1", pageContents);
                         string Admin2 = JSONDeserializer("administrative_area_level_2", pageContents);
                         string Locality = JSONDeserializer("locality", pageContents);
+                        
 
                         column["administrative_area_level_1"] = Admin1;
                         column["administrative_area_level_2"] = Admin2;
                         column["Locality"] = Locality;
                         column["OnREFlag"] = REFlag;
-                        
+
                         rows.Add(column);
-                        
+
                         Console.WriteLine("\n\n");
 
 
-                        Thread.Sleep(1500);
 
                         i++;
-                        
+
                     }
                     reader.Close();
                 }
                 Console.WriteLine("queried the ITSDB");
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine("query failed");
                 Console.WriteLine(e);
@@ -298,24 +298,24 @@ namespace REFeed
                 foreach (string colVal in columnRead.Values)
                 {
                     csvFormatted.Append(colVal + "|");
-                    
+
                 }
 
                 File.WriteAllText(csvPath, (csvFormatted.ToString() + Environment.NewLine));
 
                 csvFormatted.Append("\n");
 
-                
+
             }
 
             Console.WriteLine(csvFormatted.ToString());
-            
-            
+
+
             Console.WriteLine("*********************");
 
             //console output some variables from the JSON input
-            
-           
+
+
             cnn.Close();
             //for debugging, console stays open
             Console.WriteLine("Press any button to close....");
@@ -325,14 +325,15 @@ namespace REFeed
         //separating out functions into methods for cleaner code
 
         //method to take unsorted address details and compile them into a URL
-        static string SortAddresses (string unsortedAddress, string inputAPIKey)
+        static string SortAddresses(string unsortedAddress, string inputAPIKey)
         {
-            
+
             string googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
             StringBuilder outputAddress = new StringBuilder(googleURL);
             string finalAddress = "";
+            string stringifiedOutput = "";
 
-            string[] delimiterStrings = {" /n"," "};
+            string[] delimiterStrings = { " /n", " " };
 
             string[] words = unsortedAddress.Split(delimiterStrings, StringSplitOptions.None);
 
@@ -340,25 +341,27 @@ namespace REFeed
 
             foreach (string s in words)
             {
-                outputAddress.Append(s + "+"); 
+                
+                outputAddress.Append(RemoveSpecialCharacters(s) + "+");
+                
             }
 
             outputAddress.Append(APIKey);
 
-            finalAddress = outputAddress.ToString();
+            stringifiedOutput = outputAddress.ToString();
 
-            //Console.WriteLine("The Output address for this user is..... " + finalAddress);
+            
+            finalAddress = stringifiedOutput;
 
-            //sortedAddress = unsortedAddress;
-
+            
             return finalAddress;
         }
 
-        static string JSONDeserializer (string reqType, string urlcontents)
+        static string JSONDeserializer(string reqType, string urlcontents)
         {
-            
+
             Console.WriteLine("Deserializing....");
-            
+
 
             string JSONcontents = urlcontents;
             string outputData = "NULL";
@@ -374,20 +377,20 @@ namespace REFeed
                 {
                     foreach (var innerRes1 in res.address_components)
                     {
-                        if(innerRes1.types.Contains(reqType))
+                        if (innerRes1.types.Contains(reqType))
                         {
 
                             collectedStuff.Add(innerRes1.long_name);
 
                             //Console.WriteLine(outputData);
-                            
+
 
 
                         }
                     }
                 }
 
-                
+
 
 
                 foreach (string elem in collectedStuff)
@@ -402,14 +405,14 @@ namespace REFeed
                         outputStuff.Append(", ");
                     }
 
-                    
 
-                    
+
+
                 }
 
                 outputData = outputStuff.ToString();
 
-                if(outputData.Length != 0 )
+                if (outputData.Length != 0)
                 {
                     outputData = outputData.Remove(outputData.Length - 2);
                 }
@@ -420,21 +423,27 @@ namespace REFeed
                 return outputData;
             }
 
-               
-                
-
-            
-
-            
-
-
 
             Console.WriteLine(reqType + ": " + outputData + "\n");
             return outputData;
 
         }
 
-         
 
-    
+
+        public static string RemoveSpecialCharacters(string str)
+        {
+            return System.Text.RegularExpressions.Regex.Replace(str, "[^a-zA-Z0-9_.]+", "", System.Text.RegularExpressions.RegexOptions.Compiled);
+        }
+
+
+        public static void ReadCusConfig()
+        {
+            string configFilePath = "";
+
+
+        }
+    }
 }
+    
+
