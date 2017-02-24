@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Web;
 
+
 namespace REFeed
 
 {
@@ -22,9 +23,15 @@ namespace REFeed
             string cnnString = null;
             string DBQuery = null;
 
-            int loopControl = 500;
+            string configFilePath = @"C:\Temp\refeedconfig.txt";
+
+
+            int loopControl = 1;
             string googleAPIKey = "AIzaSyDGtABIyvMtekqCCD5dKSDGCn3mANVpvME";
 
+            CheckCustomConfigFileExists(configFilePath);
+            ReadCusConfig("","");
+            //ReadCusConfig(configFilePath, "APIKey");
 
             List<Dictionary<string, string>> rows = new List<Dictionary<string, string>>();
             Dictionary<string, string> column;
@@ -195,10 +202,7 @@ namespace REFeed
                             {
                                 while (REreader.Read())
                                 {
-                                    //Console.WriteLine(REreader["FIRST_NAME"].ToString());
-                                    //Console.WriteLine(REreader["MIDDLE_NAME"].ToString());
-                                    //Console.WriteLine(REreader["KEY_NAME"].ToString());
-                                    //Console.WriteLine(REreader["TEXT"].ToString());
+                                    
 
 
                                     REFlag = "true";
@@ -360,7 +364,7 @@ namespace REFeed
         static string JSONDeserializer(string reqType, string urlcontents)
         {
 
-            Console.WriteLine("Deserializing....");
+            //Console.WriteLine("Deserializing....");
 
 
             string JSONcontents = urlcontents;
@@ -381,11 +385,7 @@ namespace REFeed
                         {
 
                             collectedStuff.Add(innerRes1.long_name);
-
-                            //Console.WriteLine(outputData);
-
-
-
+                            
                         }
                     }
                 }
@@ -418,13 +418,10 @@ namespace REFeed
                 }
                 //push array strings into single string then set as outPutData
 
-                Console.WriteLine(reqType + ": " + outputData + "\n");
-
+                
                 return outputData;
             }
-
-
-            Console.WriteLine(reqType + ": " + outputData + "\n");
+            
             return outputData;
 
         }
@@ -436,11 +433,62 @@ namespace REFeed
             return System.Text.RegularExpressions.Regex.Replace(str, "[^a-zA-Z0-9_.]+", "", System.Text.RegularExpressions.RegexOptions.Compiled);
         }
 
-
-        public static void ReadCusConfig()
+        public static string CheckCustomConfigFileExists(string configFilePath)
         {
-            string configFilePath = "";
 
+            
+            
+            string userprof = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string customConfigFilePath = appDataPath + @"\refeedconfig.txt";
+            
+
+
+            Console.WriteLine(customConfigFilePath);
+
+            if(!File.Exists(customConfigFilePath))
+            {
+                Console.WriteLine(customConfigFilePath + " does not exist!");
+
+                using (StreamWriter sw = File.CreateText(customConfigFilePath))
+                {
+                    sw.Close();
+                }
+
+            }
+
+
+            return customConfigFilePath;
+        }
+
+        public static string ReadCusConfig(string configFilePath, string ReqParameter)
+        {
+            
+            string output = "";
+            
+
+            try
+            {
+                string[] readText = File.ReadAllLines(configFilePath);
+                
+
+                foreach (string s in readText)
+                {
+                    Console.WriteLine(s);
+                    
+                }
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Could not read from custom Config file! \n" + e);
+            }
+
+            
+
+           
+
+            return output;
 
         }
     }
