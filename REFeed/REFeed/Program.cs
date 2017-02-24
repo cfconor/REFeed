@@ -30,9 +30,8 @@ namespace REFeed
             string googleAPIKey = "AIzaSyDGtABIyvMtekqCCD5dKSDGCn3mANVpvME";
 
             CheckCustomConfigFileExists(configFilePath);
-            ReadCusConfig("","");
-            //ReadCusConfig(configFilePath, "APIKey");
-
+            ReadCusConfig(configFilePath,"");
+            
             List<Dictionary<string, string>> rows = new List<Dictionary<string, string>>();
             Dictionary<string, string> column;
 
@@ -58,7 +57,7 @@ namespace REFeed
             SqlConnection cnn2 = new SqlConnection(cnnString);
 
 
-            //open cnn
+            //open connection to ITS Database or Throw exception
             try
             {
                 cnn.Open();
@@ -66,9 +65,10 @@ namespace REFeed
 
 
             }
-            catch
+            catch(Exception e)
             {
                 Console.WriteLine("ping failed!");
+                Console.WriteLine(e);
             }
 
             try
@@ -103,10 +103,7 @@ namespace REFeed
                         //Keep Track of loop
                         Console.WriteLine("*********************");
                         Console.WriteLine("This is iteration of Loop number...." + i + "\n");
-
-                        //string jsonFilePath = @"C:\Users\ccreaghpeschau\Documents\REFeed\JSON" + i + ".json";
-
-
+                        
                         column = new Dictionary<string, string>();
 
                         //assign all ITSDB columns into dictionary for easy manipulation
@@ -213,10 +210,7 @@ namespace REFeed
                             {
                                 REFlag = "false";
                             }
-
-
-
-
+                            
                             REreader.Close();
                         }
                         catch (Exception e)
@@ -239,11 +233,6 @@ namespace REFeed
                             using (WebClient client = new WebClient())
                             {
                                 pageContents = client.DownloadString(url);
-
-
-
-                                //Console.WriteLine(pageContents);
-
                             }
                         }
                         catch (Exception e)
@@ -255,8 +244,7 @@ namespace REFeed
 
                         //add Admin1, Admin2 and Locality to code if returned
 
-                        //Console.WriteLine("jsonFilePath is: " + jsonFilePath + "\n\n");
-
+                        
                         string Admin1 = JSONDeserializer("administrative_area_level_1", pageContents);
                         string Admin2 = JSONDeserializer("administrative_area_level_2", pageContents);
                         string Locality = JSONDeserializer("locality", pageContents);
@@ -285,9 +273,9 @@ namespace REFeed
                 Console.WriteLine("query failed");
                 Console.WriteLine(e);
             }
+            
 
-
-
+            //Outputting Dictionary Contents
             Console.WriteLine("Showing Output of Dictionary...");
             Console.WriteLine("*********************");
 
@@ -308,18 +296,15 @@ namespace REFeed
                 File.WriteAllText(csvPath, (csvFormatted.ToString() + Environment.NewLine));
 
                 csvFormatted.Append("\n");
-
-
+                
             }
 
             Console.WriteLine(csvFormatted.ToString());
-
-
+            
             Console.WriteLine("*********************");
 
             //console output some variables from the JSON input
-
-
+            
             cnn.Close();
             //for debugging, console stays open
             Console.WriteLine("Press any button to close....");
@@ -353,10 +338,8 @@ namespace REFeed
             outputAddress.Append(APIKey);
 
             stringifiedOutput = outputAddress.ToString();
-
             
             finalAddress = stringifiedOutput;
-
             
             return finalAddress;
         }
@@ -389,10 +372,7 @@ namespace REFeed
                         }
                     }
                 }
-
-
-
-
+                
                 foreach (string elem in collectedStuff)
                 {
                     if (elem.Equals("NULL"))
@@ -405,9 +385,6 @@ namespace REFeed
                         outputStuff.Append(", ");
                     }
 
-
-
-
                 }
 
                 outputData = outputStuff.ToString();
@@ -417,7 +394,6 @@ namespace REFeed
                     outputData = outputData.Remove(outputData.Length - 2);
                 }
                 //push array strings into single string then set as outPutData
-
                 
                 return outputData;
             }
@@ -435,15 +411,11 @@ namespace REFeed
 
         public static string CheckCustomConfigFileExists(string configFilePath)
         {
-
-            
             
             string userprof = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string customConfigFilePath = appDataPath + @"\refeedconfig.txt";
             
-
-
             Console.WriteLine(customConfigFilePath);
 
             if(!File.Exists(customConfigFilePath))
@@ -466,12 +438,10 @@ namespace REFeed
             
             string output = "";
             
-
             try
             {
                 string[] readText = File.ReadAllLines(configFilePath);
                 
-
                 foreach (string s in readText)
                 {
                     Console.WriteLine(s);
@@ -483,11 +453,7 @@ namespace REFeed
             {
                 Console.WriteLine("Could not read from custom Config file! \n" + e);
             }
-
             
-
-           
-
             return output;
 
         }
