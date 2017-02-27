@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Threading;
 using System.Web;
-
+using System.Text.RegularExpressions;
 
 namespace REFeed
 
@@ -26,7 +26,7 @@ namespace REFeed
             string configFilePath = @"C:\Temp\refeedconfig.txt";
 
 
-            int loopControl = 1;
+            int loopControl = 50;
             string googleAPIKey = "AIzaSyDGtABIyvMtekqCCD5dKSDGCn3mANVpvME";
 
             CheckCustomConfigFileExists(configFilePath);
@@ -126,7 +126,7 @@ namespace REFeed
                             column["MidName"] = reader["MidName"].ToString();
                             column["Titl1"] = reader["Titl1"].ToString();
                             column["Gender"] = reader["Gender"].ToString();
-                            column["AddrLines"] = reader["AddrLines"].ToString();
+                            column["AddrLines"] = @reader["AddrLines"].ToString();
                             column["AddrCity"] = reader["AddrCity"].ToString();
                             column["AddrCounty"] = reader["AddrCounty"].ToString();
                             column["LEN_COUNTY"] = reader["LEN_COUNTY"].ToString();
@@ -172,17 +172,17 @@ namespace REFeed
                         }
 
 
-
                         //match against existing RE records!!!
+                        
 
                         string IDtoMatch = column["ConsID"];
                         string REQuery = "select FIRST_NAME,MIDDLE_NAME,KEY_NAME,TEXT from[UCC].[dbo].[CONSTITUENT] inner join[UCC].[dbo].[ConstituentAttributes] on[CONSTITUENT].RECORDS_ID = [ConstituentAttributes].PARENTID inner join[UCC].[dbo].[AttributeTypes] on[ConstituentAttributes].ATTRIBUTETYPESID = [AttributeTypes].ATTRIBUTETYPESID where upper(DESCRIPTION)  like '%STUDENT%ID%' AND TEXT = '" + IDtoMatch + "'";
                         string REFlag = "false";
 
+                        
 
 
-
-                        Console.WriteLine(IDtoMatch);
+                        //Console.WriteLine(IDtoMatch);
 
                         try
                         {
@@ -280,6 +280,7 @@ namespace REFeed
             Console.WriteLine("*********************");
 
             string csvPath = @"C:\Users\ccreaghpeschau\Documents\REFeed\csvoutput.csv";
+            string trimmedOutput = "";
 
             File.WriteAllText(csvPath, "");
 
@@ -289,8 +290,13 @@ namespace REFeed
             {
                 foreach (string colVal in columnRead.Values)
                 {
-                    csvFormatted.Append(colVal + "|");
 
+                        trimmedOutput = Regex.Replace(colVal, @"[,]", "");
+
+                        trimmedOutput = trimmedOutput.Replace("/n",string.Empty);    
+
+                        csvFormatted.Append(trimmedOutput + ",");
+                    
                 }
 
                 File.WriteAllText(csvPath, (csvFormatted.ToString() + Environment.NewLine));
