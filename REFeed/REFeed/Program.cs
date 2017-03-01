@@ -20,17 +20,23 @@ namespace REFeed
 
         static void Main(string[] args)
         {
+            string userprof = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string customConfigFilePath = appDataPath + @"\refeedconfig.txt";
+
             string cnnString = null;
             string DBQuery = null;
+
+
 
             string configFilePath = @"C:\Temp\refeedconfig.txt";
 
 
-            int loopControl = 50;
+            int loopControl = 1;
             string googleAPIKey = "AIzaSyDGtABIyvMtekqCCD5dKSDGCn3mANVpvME";
 
-            CheckCustomConfigFileExists(configFilePath);
-            ReadCusConfig(configFilePath,"");
+            CheckCustomConfigFileExists(customConfigFilePath);
+            ReadCusConfig(customConfigFilePath, "APIKey");
             
             List<Dictionary<string, string>> rows = new List<Dictionary<string, string>>();
             Dictionary<string, string> column;
@@ -408,8 +414,6 @@ namespace REFeed
 
         }
 
-
-
         public static string RemoveSpecialCharacters(string str)
         {
             return System.Text.RegularExpressions.Regex.Replace(str, "[^a-zA-Z0-9_.]+", "", System.Text.RegularExpressions.RegexOptions.Compiled);
@@ -418,17 +422,15 @@ namespace REFeed
         public static string CheckCustomConfigFileExists(string configFilePath)
         {
             
-            string userprof = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string customConfigFilePath = appDataPath + @"\refeedconfig.txt";
             
-            Console.WriteLine(customConfigFilePath);
+            
+            Console.WriteLine(configFilePath);
 
-            if(!File.Exists(customConfigFilePath))
+            if(!File.Exists(configFilePath))
             {
-                Console.WriteLine(customConfigFilePath + " does not exist!");
+                Console.WriteLine(configFilePath + " does not exist!");
 
-                using (StreamWriter sw = File.CreateText(customConfigFilePath))
+                using (StreamWriter sw = File.CreateText(configFilePath))
                 {
                     sw.Close();
                 }
@@ -436,7 +438,7 @@ namespace REFeed
             }
 
 
-            return customConfigFilePath;
+            return configFilePath;
         }
 
         public static string ReadCusConfig(string configFilePath, string ReqParameter)
@@ -450,8 +452,18 @@ namespace REFeed
                 
                 foreach (string s in readText)
                 {
-                    Console.WriteLine(s);
-                    
+
+
+                    if (s.Contains(ReqParameter))
+                    {
+                        Console.WriteLine(s);
+                        string[] spltStr = s.Split('|');
+
+                        Console.WriteLine(spltStr[1]);
+
+
+                    }
+
                 }
 
             }
