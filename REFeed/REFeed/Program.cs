@@ -29,15 +29,18 @@ namespace REFeed
 
 
 
-            string configFilePath = @"C:\Temp\refeedconfig.txt";
-
+            
 
             int loopControl = 1;
             string googleAPIKey = "AIzaSyDGtABIyvMtekqCCD5dKSDGCn3mANVpvME";
 
+            ReadUserConfig(@"C:\Temp\refeedconfig.txt");
+
             CheckCustomConfigFileExists(customConfigFilePath);
             ReadCusConfig(customConfigFilePath, "APIKey");
             
+
+
             List<Dictionary<string, string>> rows = new List<Dictionary<string, string>>();
             Dictionary<string, string> column;
 
@@ -456,9 +459,9 @@ namespace REFeed
 
                     if (s.Contains(ReqParameter))
                     {
-                        Console.WriteLine(s);
+                        //Console.WriteLine(s);
                         string[] spltStr = s.Split('|');
-
+                        output = spltStr[1];
                         Console.WriteLine(spltStr[1]);
 
 
@@ -474,6 +477,17 @@ namespace REFeed
             
             return output;
 
+        }
+
+
+        public static void ReadUserConfig(string configFilePath)
+        {
+            string[] readText = File.ReadAllLines(configFilePath);
+
+            foreach(string s in readText)
+            {
+                Console.WriteLine(s);
+            }
         }
     }
 }
