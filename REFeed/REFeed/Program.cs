@@ -21,8 +21,10 @@ namespace REFeed
         static void Main(string[] args)
         {
             string userprof = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             string customConfigFilePath = appDataPath + @"\refeedconfig.txt";
+
+            Console.WriteLine(customConfigFilePath);
 
             string cnnString = null;
             string DBQuery = null;
@@ -31,7 +33,7 @@ namespace REFeed
 
             
 
-            int loopControl = 1;
+            int loopControl = 25;
             string googleAPIKey = "AIzaSyDGtABIyvMtekqCCD5dKSDGCn3mANVpvME";
 
             ReadUserConfig(@"C:\Temp\refeedconfig.txt");
@@ -161,8 +163,15 @@ namespace REFeed
                             column["ESRClassOf"] = reader["ESRClassOf"].ToString();
                             column["ESRDateEnt"] = reader["ESRDateEnt"].ToString();
                             column["PrimAddID"] = reader["PrimAddID"].ToString();
+
                             column["ConsCode"] = reader["ConsCode"].ToString();
+
+                            Console.WriteLine(reader["ConsCode"].ToString());
+
                             column["ESRSchoolName"] = reader["ESRSchoolName"].ToString();
+
+                            Console.WriteLine(reader["ESRSchoolName"].ToString());
+
                             column["ESRPrimAlum"] = reader["ESRPrimAlum"].ToString();
                             column["Suff1"] = reader["Suff1"].ToString();
                             column["QUAL_TYPE_DESC"] = reader["QUAL_TYPE_DESC"].ToString();
@@ -456,13 +465,13 @@ namespace REFeed
                 foreach (string s in readText)
                 {
 
-
+                    Console.WriteLine(s);
                     if (s.Contains(ReqParameter))
                     {
-                        //Console.WriteLine(s);
-                        string[] spltStr = s.Split('|');
+                       
+                        string[] spltStr = s.Split('=');
                         output = spltStr[1];
-                        Console.WriteLine(spltStr[1]);
+                        
 
 
                     }
@@ -483,10 +492,15 @@ namespace REFeed
         public static void ReadUserConfig(string configFilePath)
         {
             string[] readText = File.ReadAllLines(configFilePath);
+            
 
-            foreach(string s in readText)
+            foreach (string s in readText)
             {
+                
+                
+
                 Console.WriteLine(s);
+                
             }
         }
     }
