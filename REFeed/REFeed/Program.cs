@@ -21,58 +21,43 @@ namespace REFeed
         static void Main(string[] args)
         {
             string userprof = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string customConfigFilePath = appDataPath + @"\refeedconfig.txt";
+            string myDocsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string customConfigFilePath = myDocsPath + @"\REFeed\refeedconfig.txt";
 
-            Console.WriteLine(customConfigFilePath);
-
+            CheckCustomConfigFileExists(customConfigFilePath);
+            
             string cnnString = null;
             string DBQuery = null;
 
+            string loopControlStr = ReadCusConfig(customConfigFilePath, "Loop_Control");
 
+            loopControlStr = RemoveSpecialCharacters(loopControlStr);
 
+            int loopControl = Convert.ToInt32(loopControlStr);
+            string googleAPIKey = ReadCusConfig(customConfigFilePath, "APIKey");
             
-
-            int loopControl = 25;
-            string googleAPIKey = "AIzaSyDGtABIyvMtekqCCD5dKSDGCn3mANVpvME";
-
-            ReadUserConfig(@"C:\Temp\refeedconfig.txt");
-
-            CheckCustomConfigFileExists(customConfigFilePath);
-            ReadCusConfig(customConfigFilePath, "APIKey");
-            
-
-
             List<Dictionary<string, string>> rows = new List<Dictionary<string, string>>();
             Dictionary<string, string> column;
-
-
+            
             cnnString = "Server=lazarus.ucc.ie;Database=UCC;Trusted_Connection=True;";
             DBQuery = "select * from ITSPRD..RENC_IF.RAISERS_EDGE_EXTRACT where ESRCLASSOF = '2016' order by LastName ASC";
-
-
-
-
+            
             SqlConnection cnn = new SqlConnection(cnnString);
             SqlCommand query = new SqlCommand();
             SqlDataReader reader;
-
-
+            
             query.CommandText = DBQuery;
             query.CommandType = CommandType.Text;
             query.Connection = cnn;
-
-
-
+            
             //connect to existing students table in RE to match REFlag results
             SqlConnection cnn2 = new SqlConnection(cnnString);
-
-
+            
             //open connection to ITS Database or Throw exception
             try
             {
                 cnn.Open();
-                Console.WriteLine("pinged DB server!\n");
+                Console.WriteLine("pinged DB Server\n");
 
 
             }
@@ -85,7 +70,7 @@ namespace REFeed
             try
             {
                 cnn2.Open();
-                Console.WriteLine("connected to  Raisers Edge DB server for entry matching!\n");
+                Console.WriteLine("connected to  Raisers Edge DB server for entry matching! Please Wait...\n");
             }
             catch (Exception e)
             {
@@ -106,14 +91,14 @@ namespace REFeed
 
 
 
-                    //control the loop - use a second while condition (while i < loopControl, i++)
+                    //control the loop - use a second while condition (while i < loopControl, i++) (if loopControl is 0, read all records)
                     int i = 0;
 
-                    while (i < loopControl && reader.Read())
+                    while (loopControl == 0 || i < loopControl && reader.Read())
                     {
                         //Keep Track of loop
                         Console.WriteLine("*********************");
-                        Console.WriteLine("This is iteration of Loop number...." + i + "\n");
+                        Console.WriteLine("This is iteration of Loop number...." + (i + 1) + "\n");
                         
                         column = new Dictionary<string, string>();
 
@@ -165,13 +150,9 @@ namespace REFeed
                             column["PrimAddID"] = reader["PrimAddID"].ToString();
 
                             column["ConsCode"] = reader["ConsCode"].ToString();
-
-                            Console.WriteLine(reader["ConsCode"].ToString());
-
+                            
                             column["ESRSchoolName"] = reader["ESRSchoolName"].ToString();
-
-                            Console.WriteLine(reader["ESRSchoolName"].ToString());
-
+                            
                             column["ESRPrimAlum"] = reader["ESRPrimAlum"].ToString();
                             column["Suff1"] = reader["Suff1"].ToString();
                             column["QUAL_TYPE_DESC"] = reader["QUAL_TYPE_DESC"].ToString();
@@ -190,18 +171,11 @@ namespace REFeed
                         }
 
 
-                        //match against existing RE records!!!
-                        
-
+                        //match against existing RE records
                         string IDtoMatch = column["ConsID"];
                         string REQuery = "select FIRST_NAME,MIDDLE_NAME,KEY_NAME,TEXT from[UCC].[dbo].[CONSTITUENT] inner join[UCC].[dbo].[ConstituentAttributes] on[CONSTITUENT].RECORDS_ID = [ConstituentAttributes].PARENTID inner join[UCC].[dbo].[AttributeTypes] on[ConstituentAttributes].ATTRIBUTETYPESID = [AttributeTypes].ATTRIBUTETYPESID where upper(DESCRIPTION)  like '%STUDENT%ID%' AND TEXT = '" + IDtoMatch + "'";
                         string REFlag = "false";
-
                         
-
-
-                        //Console.WriteLine(IDtoMatch);
-
                         try
                         {
                             SqlCommand REquery = new SqlCommand();
@@ -217,11 +191,7 @@ namespace REFeed
                             {
                                 while (REreader.Read())
                                 {
-                                    
-
-
                                     REFlag = "true";
-
                                 }
                             }
                             else //reader has no rows, user is not in Raisers Edge
@@ -235,12 +205,9 @@ namespace REFeed
                         {
                             Console.WriteLine(e);
                         }
-
-
+                        
                         //use SortAddresses method to sort sort addresses into Google API readable format
-
                         string url;
-
                         url = SortAddresses(column["AddrLines"], googleAPIKey);
                         string pageContents = "";
 
@@ -257,28 +224,18 @@ namespace REFeed
                         {
                             Console.WriteLine(e);
                         }
-
-
-
-                        //add Admin1, Admin2 and Locality to code if returned
-
                         
+                        //add Admin1, Admin2 and Locality to code if returned
                         string Admin1 = JSONDeserializer("administrative_area_level_1", pageContents);
                         string Admin2 = JSONDeserializer("administrative_area_level_2", pageContents);
                         string Locality = JSONDeserializer("locality", pageContents);
                         
-
                         column["administrative_area_level_1"] = Admin1;
                         column["administrative_area_level_2"] = Admin2;
                         column["Locality"] = Locality;
                         column["OnREFlag"] = REFlag;
-
                         rows.Add(column);
-
                         Console.WriteLine("\n\n");
-
-
-
                         i++;
 
                     }
@@ -292,12 +249,11 @@ namespace REFeed
                 Console.WriteLine(e);
             }
             
-
             //Outputting Dictionary Contents
             Console.WriteLine("Showing Output of Dictionary...");
             Console.WriteLine("*********************");
 
-            string csvPath = @"C:\Users\ccreaghpeschau\Documents\REFeed\csvoutput.csv";
+            string csvPath = myDocsPath + @"\REFeed\csvoutput.csv";
             string trimmedOutput = "";
 
             File.WriteAllText(csvPath, "");
@@ -322,8 +278,6 @@ namespace REFeed
                 csvFormatted.Append("\n");
                 
             }
-
-            Console.WriteLine(csvFormatted.ToString());
             
             Console.WriteLine("*********************");
 
@@ -331,12 +285,11 @@ namespace REFeed
             
             cnn.Close();
             //for debugging, console stays open
+            Console.WriteLine("The CSV file containing user data can be found at: " + csvPath);
+
             Console.WriteLine("Press any button to close....");
             Console.ReadKey();
         }
-
-        //separating out functions into methods for cleaner code
-
         //method to take unsorted address details and compile them into a URL
         static string SortAddresses(string unsortedAddress, string inputAPIKey)
         {
@@ -367,7 +320,7 @@ namespace REFeed
             
             return finalAddress;
         }
-
+        //turn JSON object into string data
         static string JSONDeserializer(string reqType, string urlcontents)
         {
 
@@ -425,18 +378,18 @@ namespace REFeed
             return outputData;
 
         }
-
+         
         public static string RemoveSpecialCharacters(string str)
         {
             return System.Text.RegularExpressions.Regex.Replace(str, "[^a-zA-Z0-9_.]+", "", System.Text.RegularExpressions.RegexOptions.Compiled);
         }
-
+        //verify if a config file exists
         public static string CheckCustomConfigFileExists(string configFilePath)
         {
             
             
             
-            Console.WriteLine(configFilePath);
+            
 
             if(!File.Exists(configFilePath))
             {
@@ -452,7 +405,7 @@ namespace REFeed
 
             return configFilePath;
         }
-
+        //read specific parameter from user config file, returns matching value (user config data must have form parameterDescription=parameter)
         public static string ReadCusConfig(string configFilePath, string ReqParameter)
         {
             
@@ -464,8 +417,7 @@ namespace REFeed
                 
                 foreach (string s in readText)
                 {
-
-                    Console.WriteLine(s);
+                    
                     if (s.Contains(ReqParameter))
                     {
                        
@@ -487,22 +439,7 @@ namespace REFeed
             return output;
 
         }
-
-
-        public static void ReadUserConfig(string configFilePath)
-        {
-            string[] readText = File.ReadAllLines(configFilePath);
-            
-
-            foreach (string s in readText)
-            {
-                
-                
-
-                Console.WriteLine(s);
-                
-            }
-        }
+        
     }
 }
     
