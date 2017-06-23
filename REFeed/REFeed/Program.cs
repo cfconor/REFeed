@@ -20,14 +20,22 @@ namespace REFeed
 
         static void Main(string[] args)
         {
+
+            //refeedconfig logfile should always be located in User\REFeed\
             string userprof = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string myDocsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             string customConfigFilePath = myDocsPath + @"\REFeed\refeedconfig.txt";
-
+            //check if logfile exists in above location
             CheckCustomConfigFileExists(customConfigFilePath);
-            
+
+            string ESRClassOf = ReadCusConfig(customConfigFilePath, "ESRCLASSOF");
+
+            //initialized variables
+            string csvPath = myDocsPath + @"\REFeed\csvoutput.csv";
             string cnnString = null;
             string DBQuery = null;
+            //Boolean firstRun = true;
+
 
             string loopControlStr = ReadCusConfig(customConfigFilePath, "Loop_Control");
 
@@ -40,7 +48,7 @@ namespace REFeed
             Dictionary<string, string> column;
             
             cnnString = "Server=lazarus.ucc.ie;Database=UCC;Trusted_Connection=True;";
-            DBQuery = "select * from ITSPRD..RENC_IF.RAISERS_EDGE_EXTRACT where ESRCLASSOF = '2016' order by LastName ASC";
+            DBQuery = "select * from ITSPRD..RENC_IF.RAISERS_EDGE_EXTRACT where ESRCLASSOF = '" + ESRClassOf + "' order by LastName ASC";
             
             SqlConnection cnn = new SqlConnection(cnnString);
             SqlCommand query = new SqlCommand();
@@ -89,7 +97,8 @@ namespace REFeed
                 {
                     Console.WriteLine("Reader has rows\n");
 
-
+                    
+                    File.WriteAllText(csvPath, "");
 
                     //control the loop - use a second while condition (while i < loopControl, i++) (if loopControl is 0, read all records)
                     int i = 0;
@@ -253,10 +262,12 @@ namespace REFeed
             Console.WriteLine("Showing Output of Dictionary...");
             Console.WriteLine("*********************");
 
-            string csvPath = myDocsPath + @"\REFeed\csvoutput.csv";
+            
             string trimmedOutput = "";
 
             File.WriteAllText(csvPath, "");
+
+            
 
             StringBuilder csvFormatted = new StringBuilder();
 
@@ -279,14 +290,14 @@ namespace REFeed
                 
             }
             
-            Console.WriteLine("*********************");
+            
 
             //console output some variables from the JSON input
             
             cnn.Close();
-            //for debugging, console stays open
+            //console stays open, allow user to record the output filepath
+            Console.WriteLine("*********************");
             Console.WriteLine("The CSV file containing user data can be found at: " + csvPath);
-
             Console.WriteLine("Press any button to close....");
             Console.ReadKey();
         }
