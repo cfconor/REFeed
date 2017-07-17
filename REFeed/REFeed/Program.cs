@@ -229,8 +229,23 @@ namespace REFeed
                         string Admin1 = JSONDeserializer("administrative_area_level_1", pageContents);
                         string Admin2 = JSONDeserializer("administrative_area_level_2", pageContents);
                         string Locality = JSONDeserializer("locality", pageContents);
-                        
-                        column["administrative_area_level_1"] = Admin1;
+
+                        if(column["AddrLines"].Contains("Cork"))
+                        {
+                            string corkAddr = IsCorkCityorCountry(column["AddrLines"]);
+                            
+                            Console.WriteLine("\n\n" + corkAddr + "\n\n");
+
+                            Admin1 = corkAddr;
+                        }
+
+                        if (column["AddrLines"].Contains("Dublin"))
+                        {
+                            Admin1 = column["AddrCounty"];
+                        }
+
+
+                            column["administrative_area_level_1"] = Admin1;
                         column["administrative_area_level_2"] = Admin2;
                         column["Locality"] = Locality;
                         column["OnREFlag"] = REFlag;
@@ -266,8 +281,8 @@ namespace REFeed
                 {
 
                         trimmedOutput = Regex.Replace(colVal, @"[,]", "");
-
-                        trimmedOutput = trimmedOutput.Replace("/n",string.Empty);    
+                        
+                        //trimmedOutput = trimmedOutput.Replace("/n",string.Empty);    
 
                         csvFormatted.Append(trimmedOutput + ",");
                     
@@ -440,6 +455,51 @@ namespace REFeed
 
         }
         
+        public static string IsCorkCityorCountry(string inputAddr)
+        {
+            string output = "";
+            bool isCounty;
+            bool isCity;
+            string corkAddr;
+
+            corkAddr = inputAddr.Replace("/n", string.Empty);
+            corkAddr = inputAddr.Replace(".", string.Empty);
+
+            
+            if (corkAddr.Contains("Co Cork") || corkAddr.Contains("Co. Cork") || corkAddr.Contains("CoCork") || corkAddr.Contains("Co  Cork"))
+            {
+                isCounty = true;
+
+                corkAddr = inputAddr.Replace("Co Cork", string.Empty);
+            }
+            else
+            {
+                isCounty = false;
+            }
+
+            if(corkAddr.Contains("Cork"))
+            {
+                isCity = true;
+            }else
+            {
+                isCity = false;
+            }
+
+            if(isCity == true)
+            {
+                output = "Cork";
+            }
+            else
+            {
+                output = "Co. Cork";
+            }
+
+            
+            return output;
+        }
+
+
+
     }
 }
     
