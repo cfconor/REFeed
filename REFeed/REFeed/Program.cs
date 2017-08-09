@@ -29,6 +29,8 @@ namespace REFeed
             string cnnString = null;
             string DBQuery = null;
 
+            Dictionary<string, string> headersInput = new Dictionary<string, string>();
+
             string loopControlStr = ReadCusConfig(customConfigFilePath, "Loop_Control");
 
             loopControlStr = RemoveSpecialCharacters(loopControlStr);
@@ -94,7 +96,7 @@ namespace REFeed
                     //control the loop - use a second while condition (while i < loopControl, i++) (if loopControl is 0, read all records)
                     int i = 0;
 
-                    while (loopControl == 0 || i < loopControl && reader.Read())
+                    while ((loopControl == 0 || i < loopControl) && reader.Read())
                     {
                         //Keep Track of loop
                         Console.WriteLine("*********************");
@@ -148,11 +150,8 @@ namespace REFeed
                             column["ESRClassOf"] = reader["ESRClassOf"].ToString();
                             column["ESRDateEnt"] = reader["ESRDateEnt"].ToString();
                             column["PrimAddID"] = reader["PrimAddID"].ToString();
-
                             column["ConsCode"] = reader["ConsCode"].ToString();
-                            
                             column["ESRSchoolName"] = reader["ESRSchoolName"].ToString();
-                            
                             column["ESRPrimAlum"] = reader["ESRPrimAlum"].ToString();
                             column["Suff1"] = reader["Suff1"].ToString();
                             column["QUAL_TYPE_DESC"] = reader["QUAL_TYPE_DESC"].ToString();
@@ -162,6 +161,7 @@ namespace REFeed
                             column["MASTERS_DOCTORAL"] = reader["MASTERS_DOCTORAL"].ToString();
                             column["NQF_LEVEL"] = reader["NQF_LEVEL"].ToString();
 
+                            
 
                         }
                         catch (Exception e)
@@ -230,12 +230,10 @@ namespace REFeed
                         string Admin2 = JSONDeserializer("administrative_area_level_2", pageContents);
                         string Locality = JSONDeserializer("locality", pageContents);
 
+                        //refine AddrLines in special cases (Cork City, Cork County, Dublin)
                         if(column["AddrLines"].Contains("Cork"))
                         {
                             string corkAddr = IsCorkCityorCountry(column["AddrLines"]);
-                            
-                            Console.WriteLine("\n\n" + corkAddr + "\n\n");
-
                             Admin1 = corkAddr;
                         }
 
@@ -245,11 +243,21 @@ namespace REFeed
                         }
 
 
-                            column["administrative_area_level_1"] = Admin1;
+                        column["administrative_area_level_1"] = Admin1;
                         column["administrative_area_level_2"] = Admin2;
                         column["Locality"] = Locality;
                         column["OnREFlag"] = REFlag;
+
+                        //first run, write headers to CSV output file
+                        if (i == 0)
+                        {
+                            headersInput = column;
+                            Console.WriteLine("Sent column data to headersInput");
+                        }
+
+                        //add column to rows dictionary
                         rows.Add(column);
+
                         Console.WriteLine("\n\n");
                         i++;
 
@@ -270,8 +278,30 @@ namespace REFeed
 
             string csvPath = myDocsPath + @"\REFeed\csvoutput.csv";
             string trimmedOutput = "";
+            string trimmedHeadersOutput = "";
 
             File.WriteAllText(csvPath, "");
+
+            //write in header data
+            StringBuilder headerFormatted = new StringBuilder();
+
+            foreach (string Val in headersInput.Keys)
+            {
+                Console.WriteLine(Val);
+
+                trimmedHeadersOutput = Regex.Replace(Val, @"[,]", "");
+
+                //trimmedOutput = trimmedOutput.Replace("/n",string.Empty);    
+
+                headerFormatted.Append(trimmedHeadersOutput + ",");
+
+            }
+
+            
+
+            Console.WriteLine(headerFormatted.ToString());
+
+            File.WriteAllText(csvPath, (headerFormatted.ToString() + Environment.NewLine));
 
             StringBuilder csvFormatted = new StringBuilder();
 
@@ -289,6 +319,7 @@ namespace REFeed
                 }
 
                 File.WriteAllText(csvPath, (csvFormatted.ToString() + Environment.NewLine));
+                
 
                 csvFormatted.Append("\n");
                 
@@ -498,7 +529,7 @@ namespace REFeed
             return output;
         }
 
-
+        
 
     }
 }
