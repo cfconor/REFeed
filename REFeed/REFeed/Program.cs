@@ -20,16 +20,23 @@ namespace REFeed
 
         static void Main(string[] args)
         {
+
+            //refeedconfig logfile should always be located in User\REFeed\
             string userprof = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string myDocsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             string customConfigFilePath = myDocsPath + @"\REFeed\refeedconfig.txt";
-
+            //check if logfile exists in above location
             CheckCustomConfigFileExists(customConfigFilePath);
-            
+
+            string ESRClassOf = ReadCusConfig(customConfigFilePath, "ESRCLASSOF");
+            ESRClassOf = RemoveSpecialCharacters(ESRClassOf);
+
+
+            //initialized variables
+            string csvPath = myDocsPath + @"\REFeed\csvoutput.csv";
             string cnnString = null;
             string DBQuery = null;
-
-            Dictionary<string, string> headersInput = new Dictionary<string, string>();
+            //Boolean firstRun = true;
 
             string loopControlStr = ReadCusConfig(customConfigFilePath, "Loop_Control");
 
@@ -40,9 +47,12 @@ namespace REFeed
             
             List<Dictionary<string, string>> rows = new List<Dictionary<string, string>>();
             Dictionary<string, string> column;
-            
+
+            List<string> headersInput = new List<string>();
+
+            //DB connection and Query strings
             cnnString = "Server=lazarus.ucc.ie;Database=UCC;Trusted_Connection=True;";
-            DBQuery = "select * from ITSPRD..RENC_IF.RAISERS_EDGE_EXTRACT where ESRCLASSOF = '2016' order by LastName ASC";
+            DBQuery = "select * from ITSPRD..RENC_IF.RAISERS_EDGE_EXTRACT where ESRCLASSOF = '" + ESRClassOf + "' order by LastName ASC";
             
             SqlConnection cnn = new SqlConnection(cnnString);
             SqlCommand query = new SqlCommand();
@@ -91,8 +101,7 @@ namespace REFeed
                 {
                     Console.WriteLine("Reader has rows\n");
 
-
-
+                    
                     //control the loop - use a second while condition (while i < loopControl, i++) (if loopControl is 0, read all records)
                     int i = 0;
 
@@ -160,9 +169,7 @@ namespace REFeed
                             column["POSTGRAD_TYPE"] = reader["POSTGRAD_TYPE"].ToString();
                             column["MASTERS_DOCTORAL"] = reader["MASTERS_DOCTORAL"].ToString();
                             column["NQF_LEVEL"] = reader["NQF_LEVEL"].ToString();
-
                             
-
                         }
                         catch (Exception e)
                         {
@@ -251,7 +258,10 @@ namespace REFeed
                         //first run, write headers to CSV output file
                         if (i == 0)
                         {
-                            headersInput = column;
+                            foreach(string val in column.Keys)
+                            {
+                                headersInput.Add(val + ",");
+                            }
                             Console.WriteLine("Sent column data to headersInput");
                         }
 
@@ -271,38 +281,42 @@ namespace REFeed
                 Console.WriteLine("query failed");
                 Console.WriteLine(e);
             }
-            
+
+            foreach (Dictionary<string, string> columnRead in rows)
+            {
+                foreach (string colVal in columnRead.Values)
+                {
+
+                    Console.WriteLine(colVal);
+
+                }
+
+               
+
+            }
+
             //Outputting Dictionary Contents
             Console.WriteLine("Showing Output of Dictionary...");
             Console.WriteLine("*********************");
 
-            string csvPath = myDocsPath + @"\REFeed\csvoutput.csv";
+            
             string trimmedOutput = "";
-            string trimmedHeadersOutput = "";
+            //string trimmedHeadersOutput = "";
 
             File.WriteAllText(csvPath, "");
 
-            //write in header data
-            StringBuilder headerFormatted = new StringBuilder();
-
-            foreach (string Val in headersInput.Keys)
+            using(StreamWriter headerWrite = File.AppendText(csvPath))
             {
-                Console.WriteLine(Val);
+                foreach (string entry in headersInput)
+                {
+                    Console.WriteLine(entry);
+                    headerWrite.Write(entry);
+                }
 
-                trimmedHeadersOutput = Regex.Replace(Val, @"[,]", "");
-
-                //trimmedOutput = trimmedOutput.Replace("/n",string.Empty);    
-
-                headerFormatted.Append(trimmedHeadersOutput + ",");
-
+                headerWrite.Write("\n");
             }
-
+                
             
-
-            Console.WriteLine(headerFormatted.ToString());
-
-            File.WriteAllText(csvPath, (headerFormatted.ToString() + Environment.NewLine));
-
             StringBuilder csvFormatted = new StringBuilder();
 
             foreach (Dictionary<string, string> columnRead in rows)
@@ -311,28 +325,28 @@ namespace REFeed
                 {
 
                         trimmedOutput = Regex.Replace(colVal, @"[,]", "");
-                        
-                        //trimmedOutput = trimmedOutput.Replace("/n",string.Empty);    
-
+                    
                         csvFormatted.Append(trimmedOutput + ",");
                     
                 }
 
-                File.WriteAllText(csvPath, (csvFormatted.ToString() + Environment.NewLine));
+                Console.WriteLine(csvFormatted.ToString());
+
+                File.AppendAllText(csvPath, (csvFormatted.ToString()));
                 
 
                 csvFormatted.Append("\n");
                 
             }
             
-            Console.WriteLine("*********************");
+            
 
             //console output some variables from the JSON input
             
             cnn.Close();
-            //for debugging, console stays open
+            //console stays open, allow user to record the output filepath
+            Console.WriteLine("*********************");
             Console.WriteLine("The CSV file containing user data can be found at: " + csvPath);
-
             Console.WriteLine("Press any button to close....");
             Console.ReadKey();
         }
