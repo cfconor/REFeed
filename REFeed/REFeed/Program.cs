@@ -305,39 +305,36 @@ namespace REFeed
 
             File.WriteAllText(csvPath, "");
 
-            using(StreamWriter headerWrite = File.AppendText(csvPath))
+            using(StreamWriter csvWrite = File.AppendText(csvPath))
             {
                 foreach (string entry in headersInput)
                 {
                     Console.WriteLine(entry);
-                    headerWrite.Write(entry);
+                    csvWrite.Write(entry);
                 }
 
-                headerWrite.Write("\n");
+                csvWrite.Write("\n");
+
+                foreach (Dictionary<string, string> columnRead in rows)
+                {
+                    StringBuilder rowFormatted = new StringBuilder();
+
+                    foreach (string colVal in columnRead.Values)
+                    {
+
+                        trimmedOutput = Regex.Replace(colVal, @"[,]", "");
+
+                        rowFormatted.Append(trimmedOutput + ",");
+
+                    }
+                    csvWrite.WriteLine(rowFormatted.ToString());
+
+                    
+                }
             }
                 
             
-            StringBuilder csvFormatted = new StringBuilder();
-
-            foreach (Dictionary<string, string> columnRead in rows)
-            {
-                foreach (string colVal in columnRead.Values)
-                {
-
-                        trimmedOutput = Regex.Replace(colVal, @"[,]", "");
-                    
-                        csvFormatted.Append(trimmedOutput + ",");
-                    
-                }
-
-                Console.WriteLine(csvFormatted.ToString());
-
-                File.AppendAllText(csvPath, (csvFormatted.ToString()));
-                
-
-                csvFormatted.Append("\n");
-                
-            }
+            
             
             
 
