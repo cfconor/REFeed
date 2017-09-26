@@ -1,4 +1,5 @@
-﻿using System;
+﻿//import necessary libraries
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Text;
@@ -9,11 +10,13 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Web;
 using System.Text.RegularExpressions;
+using System.Timers;
 
+//create namespace (required; allows easy referencing and multiple classes within a namespace)
 namespace REFeed
 
 {
-
+    //Generic naming of class, one class in programme so not an issue
     public class Program
 
     {
@@ -36,8 +39,7 @@ namespace REFeed
             string csvPath = myDocsPath + @"\REFeed\csvoutput.csv";
             string cnnString = null;
             string DBQuery = null;
-            //Boolean firstRun = true;
-
+            
             string loopControlStr = ReadCusConfig(customConfigFilePath, "Loop_Control");
 
             loopControlStr = RemoveSpecialCharacters(loopControlStr);
@@ -79,6 +81,7 @@ namespace REFeed
                 Console.WriteLine(e);
             }
 
+            //open second connection to ITS Database for entry matching with Raisers Edge
             try
             {
                 cnn2.Open();
@@ -182,12 +185,13 @@ namespace REFeed
                         string IDtoMatch = column["ConsID"];
                         string REQuery = "select FIRST_NAME,MIDDLE_NAME,KEY_NAME,TEXT from[UCC].[dbo].[CONSTITUENT] inner join[UCC].[dbo].[ConstituentAttributes] on[CONSTITUENT].RECORDS_ID = [ConstituentAttributes].PARENTID inner join[UCC].[dbo].[AttributeTypes] on[ConstituentAttributes].ATTRIBUTETYPESID = [AttributeTypes].ATTRIBUTETYPESID where upper(DESCRIPTION)  like '%STUDENT%ID%' AND TEXT = '" + IDtoMatch + "'";
                         string REFlag = "false";
-                        
+
+                        //query Database again to match against existing RE records
                         try
                         {
                             SqlCommand REquery = new SqlCommand();
                             SqlDataReader REreader;
-
+                            //uses same connection query as cnn1
                             REquery.CommandText = REQuery;
                             REquery.CommandType = CommandType.Text;
                             REquery.Connection = cnn2;
@@ -217,9 +221,10 @@ namespace REFeed
                         string url;
                         url = SortAddresses(column["AddrLines"], googleAPIKey);
                         string pageContents = "";
-
+                        //debug output
                         Console.WriteLine("The Output address for this user is..... " + url);
-
+                        
+                        //download JSON object from Google Geocoding API
                         try
                         {
                             using (WebClient client = new WebClient())
@@ -232,7 +237,7 @@ namespace REFeed
                             Console.WriteLine(e);
                         }
                         
-                        //add Admin1, Admin2 and Locality to code if returned
+                        //add Admin1, Admin2 and Locality from JSON Object to variables if returned
                         string Admin1 = JSONDeserializer("administrative_area_level_1", pageContents);
                         string Admin2 = JSONDeserializer("administrative_area_level_2", pageContents);
                         string Locality = JSONDeserializer("locality", pageContents);
@@ -249,7 +254,7 @@ namespace REFeed
                             Admin1 = column["AddrCounty"];
                         }
 
-
+                        //assign dictionary elements
                         column["administrative_area_level_1"] = Admin1;
                         column["administrative_area_level_2"] = Admin2;
                         column["Locality"] = Locality;
@@ -268,8 +273,14 @@ namespace REFeed
                         //add column to rows dictionary
                         rows.Add(column);
 
+                        
                         Console.WriteLine("\n\n");
+                        //iterate loop
                         i++;
+                        
+                        //add timer to prevent overloading web requests to Google Maps API
+                        //System.Threading.Timer timer = new System.Threading.Timer(1000);
+                        
 
                     }
                     reader.Close();
@@ -282,18 +293,7 @@ namespace REFeed
                 Console.WriteLine(e);
             }
 
-            foreach (Dictionary<string, string> columnRead in rows)
-            {
-                foreach (string colVal in columnRead.Values)
-                {
-
-                    Console.WriteLine(colVal);
-
-                }
-
-               
-
-            }
+            
 
             //Outputting Dictionary Contents
             Console.WriteLine("Showing Output of Dictionary...");
@@ -309,7 +309,7 @@ namespace REFeed
             {
                 foreach (string entry in headersInput)
                 {
-                    Console.WriteLine(entry);
+                    
                     csvWrite.Write(entry);
                 }
 
@@ -381,8 +381,7 @@ namespace REFeed
         static string JSONDeserializer(string reqType, string urlcontents)
         {
 
-            //Console.WriteLine("Deserializing....");
-
+            
 
             string JSONcontents = urlcontents;
             string outputData = "NULL";
@@ -435,7 +434,7 @@ namespace REFeed
             return outputData;
 
         }
-         
+        //Remove special Characters from Code
         public static string RemoveSpecialCharacters(string str)
         {
             return System.Text.RegularExpressions.Regex.Replace(str, "[^a-zA-Z0-9_.]+", "", System.Text.RegularExpressions.RegexOptions.Compiled);
@@ -496,7 +495,7 @@ namespace REFeed
             return output;
 
         }
-        
+        //Specify the Address type for any address in Cork
         public static string IsCorkCityorCountry(string inputAddr)
         {
             string output = "";
@@ -539,9 +538,7 @@ namespace REFeed
             
             return output;
         }
-
         
-
     }
 }
     
