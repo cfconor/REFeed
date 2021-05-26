@@ -25,6 +25,7 @@ namespace REFeed
             string userprof = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string myDocsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             string customConfigFilePath = myDocsPath + @"\REFeed\refeedconfig.txt";
+            
             //check if logfile exists in above location
             CheckCustomConfigFileExists(customConfigFilePath);
 
@@ -34,7 +35,6 @@ namespace REFeed
             string csvPath = myDocsPath + @"\REFeed\csvoutput.csv";
             string cnnString = null;
             string DBQuery = null;
-            //Boolean firstRun = true;
 
 
             string loopControlStr = ReadCusConfig(customConfigFilePath, "Loop_Control");
@@ -157,11 +157,8 @@ namespace REFeed
                             column["ESRClassOf"] = reader["ESRClassOf"].ToString();
                             column["ESRDateEnt"] = reader["ESRDateEnt"].ToString();
                             column["PrimAddID"] = reader["PrimAddID"].ToString();
-
                             column["ConsCode"] = reader["ConsCode"].ToString();
-                            
                             column["ESRSchoolName"] = reader["ESRSchoolName"].ToString();
-                            
                             column["ESRPrimAlum"] = reader["ESRPrimAlum"].ToString();
                             column["Suff1"] = reader["Suff1"].ToString();
                             column["QUAL_TYPE_DESC"] = reader["QUAL_TYPE_DESC"].ToString();
@@ -334,10 +331,6 @@ namespace REFeed
         //turn JSON object into string data
         static string JSONDeserializer(string reqType, string urlcontents)
         {
-
-            //Console.WriteLine("Deserializing....");
-
-
             string JSONcontents = urlcontents;
             string outputData = "NULL";
             var collectedStuff = new List<string>();
