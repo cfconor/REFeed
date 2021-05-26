@@ -179,7 +179,7 @@ namespace REFeed
 
                         //match against existing RE records
                         string IDtoMatch = column["ConsID"];
-                        string REQuery = "select FIRST_NAME,MIDDLE_NAME,KEY_NAME,TEXT from[UCC].[dbo].[CONSTITUENT] inner join[UCC].[dbo].[ConstituentAttributes] on[CONSTITUENT].RECORDS_ID = [ConstituentAttributes].PARENTID inner join[UCC].[dbo].[AttributeTypes] on[ConstituentAttributes].ATTRIBUTETYPESID = [AttributeTypes].ATTRIBUTETYPESID where upper(DESCRIPTION)  like '%STUDENT%ID%' AND TEXT = '" + IDtoMatch + "'";
+                        string REQuery = ""; // removed for security purposes, exposes sensitive information from a database.
                         string REFlag = "false";
                         
                         try
